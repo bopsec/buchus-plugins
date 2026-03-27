@@ -32,16 +32,20 @@ import java.util.ArrayList;
 import java.util.Objects;
 import javax.inject.Inject;
 
-import net.runelite.api.*;
+import net.runelite.api.Client;
+import net.runelite.api.NPC;
+import net.runelite.api.NPCComposition;
+import net.runelite.api.Perspective;
 import net.runelite.api.Point;
+import net.runelite.api.WorldView;
 import net.runelite.api.coords.LocalPoint;
+import net.runelite.api.gameval.NpcID;
 import net.runelite.client.game.NpcUtil;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.OverlayUtil;
 import net.runelite.client.ui.overlay.outline.ModelOutlineRenderer;
-import static net.runelite.api.NpcID.*;
 
 public class TzhaarHPTrackerOverlay extends Overlay
 {
@@ -100,7 +104,7 @@ public class TzhaarHPTrackerOverlay extends Overlay
 						int size = npcComposition.getSize();
 
 						//Only highlights NPCs - not pillars
-						if (n.getNpc().getId() != ROCKY_SUPPORT)
+						if (n.getNpc().getId() != NpcID.INFERNO_INVISIBLE_3X3)
 						{
 							if (config.highlightStyle().contains(TzhaarHPTrackerConfig.HighlightStyle.TILE))
 							{
@@ -213,8 +217,8 @@ public class TzhaarHPTrackerOverlay extends Overlay
 							}
 						}
 
-						if ((config.showHp() != TzhaarHPTrackerConfig.HpLocation.OFF && n.getNpc().getId() != ROCKY_SUPPORT)
-							|| (config.showPillarHp() != TzhaarHPTrackerConfig.HpLocation.OFF && n.getNpc().getId() == ROCKY_SUPPORT))
+						if ((config.showHp() != TzhaarHPTrackerConfig.HpLocation.OFF && n.getNpc().getId() != NpcID.INFERNO_INVISIBLE_3X3)
+							|| (config.showPillarHp() != TzhaarHPTrackerConfig.HpLocation.OFF && n.getNpc().getId() == NpcID.INFERNO_INVISIBLE_3X3))
 						{
 							drawHp(graphics, stackedNpcs, n);
 						}
@@ -334,7 +338,7 @@ public class TzhaarHPTrackerOverlay extends Overlay
 
 		final int zOffset;
 		int npcOffset = firstStack != null ? firstStack.getLogicalHeight() : n.getNpc().getLogicalHeight();
-		if (n.getNpc().getId() != ROCKY_SUPPORT)
+		if (n.getNpc().getId() != NpcID.INFERNO_INVISIBLE_3X3)
 		{
 			switch (config.showHp())
 			{
