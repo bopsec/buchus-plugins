@@ -96,7 +96,7 @@ public class TzhaarHPTrackerOverlay extends Overlay
 
 				if (config.showVenatorBounce())
 				{
-					java.util.List<Integer> bounces = plugin.getVenatorBounceOrder();
+					List<Integer> bounces = plugin.getVenatorBounceOrder();
 					if (bounces.size() > 1)
 					{
 						Map<Integer, PluginNPC> npcMap = new HashMap<>();

@@ -53,6 +53,7 @@ import net.runelite.api.events.GameTick;
 import net.runelite.api.events.HitsplatApplied;
 import net.runelite.api.events.InteractingChanged;
 import net.runelite.api.events.MenuOptionClicked;
+import net.runelite.api.events.SoundEffectPlayed;
 import net.runelite.api.events.StatChanged;
 import net.runelite.api.events.VarbitChanged;
 import net.runelite.api.gameval.InterfaceID;
@@ -448,6 +449,7 @@ public class DamageHandler extends InfoHandler
 					weaponStyle = WeaponMap.StyleMap.get(equippedWeapon);
 				}
 			}
+			venatorBouncesThisTick = 0;
 		}
 	}
 
@@ -573,6 +575,10 @@ public class DamageHandler extends InfoHandler
 					case STRENGTH:
 					case DEFENCE:
 					case RANGED:
+						if (weaponStyle == WeaponStyle.TRIDENTS) {
+							// gained defence XP from longrange, use MAGIC handler for this.
+							break;
+						}
 						//Long range should be calculated with range only
 						hit = calculateHitOnNpc(lastOpponentID, attackStyle == AttackStyle.LONGRANGE ? Skill.RANGED : e.getSkill(),
 							currentXp - previousXp, attackStyle, weaponStyle);
@@ -580,6 +586,13 @@ public class DamageHandler extends InfoHandler
 						break;
 					case HITPOINTS:
 						if (attackStyle == AttackStyle.CASTING)
+						{
+							hit = calculateHitOnNpc(lastOpponentID, e.getSkill(), currentXp - previousXp, attackStyle, weaponStyle);
+							processHit(hit, e.getSkill(), attackStyle, weaponStyle, (NPC) lastOpponent);
+						}
+						break;
+					case MAGIC:
+						if (weaponStyle == WeaponStyle.TRIDENTS)
 						{
 							hit = calculateHitOnNpc(lastOpponentID, e.getSkill(), currentXp - previousXp, attackStyle, weaponStyle);
 							processHit(hit, e.getSkill(), attackStyle, weaponStyle, (NPC) lastOpponent);
@@ -605,6 +618,17 @@ public class DamageHandler extends InfoHandler
 				final int currentXp = fakeXpMap.getOrDefault(e.getSkill(), 0);
 				fakeXpMap.put(e.getSkill(), currentXp + e.getXp());
 				break;
+		}
+	}
+
+	@Subscribe
+	private void onSoundEffectPlayed(SoundEffectPlayed e)
+	{
+		// Note: fires before onGameTick
+		if (e.getSoundId() == 6735) {
+			venatorBouncesThisTick = 2;
+		} else if (e.getSoundId() == 6672 && venatorBouncesThisTick < 1) {
+			venatorBouncesThisTick = 1;
 		}
 	}
 
