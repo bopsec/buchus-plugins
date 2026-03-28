@@ -557,52 +557,57 @@ public class DamageHandler extends InfoHandler
 	{
 		int currentXp = e.getXp();
 		int previousXp = previous_exp[e.getSkill().ordinal()];
-		if (previousXp > 0 && currentXp - previousXp > 0)
+		try
 		{
-			int hit;
-
-			Actor interacted = Objects.requireNonNull(client.getLocalPlayer()).getInteracting();
-			if (interacted instanceof NPC && lastOpponent == null)
+			if (previousXp > 0 && currentXp - previousXp > 0)
 			{
-				lastOpponent = interacted;
-			}
+				int hit;
 
-			if (plugin.isInAllowedCaves() && lastOpponent != null)
-			{
-				switch (e.getSkill())
+				Actor interacted = Objects.requireNonNull(client.getLocalPlayer()).getInteracting();
+				if (interacted instanceof NPC && lastOpponent == null)
 				{
-					case ATTACK:
-					case STRENGTH:
-					case DEFENCE:
-					case RANGED:
-						if (weaponStyle == WeaponStyle.TRIDENTS) {
-							// gained defence XP from longrange, use MAGIC handler for this.
+					lastOpponent = interacted;
+				}
+
+				if (plugin.isInAllowedCaves() && lastOpponent != null)
+				{
+					switch (e.getSkill())
+					{
+						case ATTACK:
+						case STRENGTH:
+						case DEFENCE:
+						case RANGED:
+							if (weaponStyle == WeaponStyle.TRIDENTS) {
+								// gained defence XP from longrange, use MAGIC handler for this.
+								break;
+							}
+							//Long range should be calculated with range only
+							hit = calculateHitOnNpc(lastOpponentID, attackStyle == AttackStyle.LONGRANGE ? Skill.RANGED : e.getSkill(),
+								currentXp - previousXp, attackStyle, weaponStyle);
+							processHit(hit, e.getSkill(), attackStyle, weaponStyle, (NPC) lastOpponent);
 							break;
-						}
-						//Long range should be calculated with range only
-						hit = calculateHitOnNpc(lastOpponentID, attackStyle == AttackStyle.LONGRANGE ? Skill.RANGED : e.getSkill(),
-							currentXp - previousXp, attackStyle, weaponStyle);
-						processHit(hit, e.getSkill(), attackStyle, weaponStyle, (NPC) lastOpponent);
-						break;
-					case HITPOINTS:
-						if (attackStyle == AttackStyle.CASTING)
-						{
-							hit = calculateHitOnNpc(lastOpponentID, e.getSkill(), currentXp - previousXp, attackStyle, weaponStyle);
-							processHit(hit, e.getSkill(), attackStyle, weaponStyle, (NPC) lastOpponent);
-						}
-						break;
-					case MAGIC:
-						if (weaponStyle == WeaponStyle.TRIDENTS)
-						{
-							hit = calculateHitOnNpc(lastOpponentID, e.getSkill(), currentXp - previousXp, attackStyle, weaponStyle);
-							processHit(hit, e.getSkill(), attackStyle, weaponStyle, (NPC) lastOpponent);
-						}
-						break;
+						case HITPOINTS:
+							if (attackStyle == AttackStyle.CASTING)
+							{
+								hit = calculateHitOnNpc(lastOpponentID, e.getSkill(), currentXp - previousXp, attackStyle, weaponStyle);
+								processHit(hit, e.getSkill(), attackStyle, weaponStyle, (NPC) lastOpponent);
+							}
+							break;
+						case MAGIC:
+							if (weaponStyle == WeaponStyle.TRIDENTS)
+							{
+								hit = calculateHitOnNpc(lastOpponentID, e.getSkill(), currentXp - previousXp, attackStyle, weaponStyle);
+								processHit(hit, e.getSkill(), attackStyle, weaponStyle, (NPC) lastOpponent);
+							}
+							break;
+					}
 				}
 			}
 		}
-
-		previous_exp[e.getSkill().ordinal()] = e.getXp();
+		finally
+		{
+			previous_exp[e.getSkill().ordinal()] = e.getXp();
+		}
 	}
 
 	@Subscribe
@@ -732,13 +737,20 @@ public class DamageHandler extends InfoHandler
 	{
 		if (!processedThisTick && damage > 0 && skill != null)
 		{
+			System.out.println("we hit a " + damage + " on " + interacting.getName());
 			if (style == WeaponStyle.DINHS)
 				return;
 
 			processedThisTick = true;
-			AoeStyle aoeStyle = style.getAoeStyle() != null ? style.getAoeStyle()
-				: (client.getLocalPlayer().getAnimation() == BARRAGE
-				|| aoeSpellQueued) ? AoeStyle.BASIC : null;
+			AoeStyle aoeStyle = null;
+			if (style != null && style.getAoeStyle() != null)
+			{
+				aoeStyle = style.getAoeStyle();
+			}
+			else if (client.getLocalPlayer() != null && (client.getLocalPlayer().getAnimation() == BARRAGE || aoeSpellQueued))
+			{
+				aoeStyle = AoeStyle.BASIC;
+			}
 			checkIfInteractingDead(damage, aoeStyle, interacting.getIndex(), attackStyle, style);
 		}
 	}
