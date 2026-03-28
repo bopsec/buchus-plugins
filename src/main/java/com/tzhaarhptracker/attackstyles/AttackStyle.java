@@ -29,12 +29,12 @@ import net.runelite.api.Skill;
 
 public enum AttackStyle
 {
-	ACCURATE("Accurate", Skill.ATTACK),
+	ACCURATE("Accurate", Skill.ATTACK, Skill.MAGIC),
 	AGGRESSIVE("Aggressive", Skill.STRENGTH),
 	DEFENSIVE("Defensive", Skill.DEFENCE),
 	CONTROLLED("Controlled", Skill.ATTACK, Skill.STRENGTH, Skill.DEFENCE),
 	RANGING("Ranging", Skill.RANGED),
-	LONGRANGE("Longrange", Skill.RANGED, Skill.DEFENCE),
+	LONGRANGE("Longrange", Skill.RANGED, Skill.DEFENCE, Skill.MAGIC),
 	CASTING("Casting", Skill.MAGIC),
 	DEFENSIVE_CASTING("Defensive Casting", Skill.MAGIC, Skill.DEFENCE),
 	OTHER("Other");

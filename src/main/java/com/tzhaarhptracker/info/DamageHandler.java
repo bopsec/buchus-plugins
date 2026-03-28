@@ -26,6 +26,9 @@
  */
 package com.tzhaarhptracker.info;
 
+import com.tzhaarhptracker.ColosseumNPC;
+import com.tzhaarhptracker.PluginNPC;
+import com.tzhaarhptracker.attackstyles.AoeStyle;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
@@ -119,6 +122,8 @@ public class DamageHandler extends InfoHandler
 	private static final int HEALING_GRAPHIC = 444;
 
 	private static final int BARRAGE = 1979;
+
+	private int venatorBouncesThisTick = 0;
 
 	@Inject
 	protected DamageHandler(TzhaarHPTrackerPlugin plugin, TzhaarHPTrackerConfig config)
@@ -215,7 +220,7 @@ public class DamageHandler extends InfoHandler
 			{
 				NPC splatNpc = (NPC) actor;
 
-				for (TzhaarNPC n : plugin.getNpcs())
+				for (PluginNPC n : plugin.getNpcs())
 				{
 					if (n.getNpc().equals(splatNpc))
 					{
@@ -316,6 +321,13 @@ public class DamageHandler extends InfoHandler
 								processHit(hit, xp.getKey(), attackStyle, weaponStyle, (NPC) lastOpponent);
 							}
 							break;
+						case MAGIC:
+							if (attackStyle != AttackStyle.CASTING) // powered staff
+							{
+								hit = calculateHitOnNpc(lastOpponentID, xp.getKey(), xp.getValue(), attackStyle, weaponStyle);
+								processHit(hit, xp.getKey(), attackStyle, weaponStyle, (NPC) lastOpponent);
+							}
+							break;
 					}
 				}
 			}
@@ -324,16 +336,67 @@ public class DamageHandler extends InfoHandler
 			//Handle HP recalculating and regen
 			if (!plugin.getNpcs().isEmpty() && client.getLocalPlayer() != null)
 			{
-				for (TzhaarNPC n : plugin.getNpcs())
+				for (PluginNPC n : plugin.getNpcs())
 				{
-					int currentTick = client.getTickCount();
-					int spawnTick = n.getSpawnTick();
-					if (currentTick - spawnTick >= 100 && n.getNpc().getId() != ROCKY_SUPPORT)
-					{
-						if (n.getHp() != n.getMaxHp())
+					if (n instanceof ColosseumNPC) {
+						int currentTick = client.getTickCount();
+						int spawnTick = n.getSpawnTick();
+						ColosseumHP hpInfo = ColosseumHP.getNPC(n.getNpc().getId());
+						int regenInterval = hpInfo != null ? hpInfo.getRegenInterval() : 100;
+						int regenAmount = hpInfo != null ? hpInfo.getRegenAmount() : 1;
+						if (currentTick - spawnTick >= regenInterval && n.getNpc().getId() != ROCKY_SUPPORT)
 						{
-							n.addHp(1);
-							n.setSpawnTick(currentTick);
+							if (n.getHp() != n.getMaxHp())
+							{
+								n.addHp(regenAmount);
+								n.setSpawnTick(currentTick);
+							}
+						}
+
+						//Recalculate HP 2 ticks after 1st hitsplat after being set to dead if still alive
+						if (n.isDead() && n.getDeathTick() != 0 && client.getTickCount() >= n.getDeathTick() + 2 && !npcUtil.isDying(n.getNpc()))
+						{
+							n.setDead(false);
+							recalcHP(n, n.getNpc().getHealthRatio(), n.getNpc().getHealthScale());
+						}
+						else
+						{
+							if (n.getHp() > 0 && npcUtil.isDying(n.getNpc()))
+							{
+								n.setHp(0);
+								handleDead(n, true);
+							}
+						}
+
+						//Healing graphic without healing hitsplats
+						if (n.getNpc().hasSpotAnim(HEALING_GRAPHIC))
+						{
+							n.setHealed(true);
+						}
+
+						//Recalculate HP for NPCs with healing graphic
+						//Zuk HP handled by widget
+						if (n.isHealed() && !Objects.equals(n.getNpc().getName(), "TzKal-Zuk"))
+						{
+							recalcHP(n, n.getNpc().getHealthRatio(), n.getNpc().getHealthScale());
+						}
+
+						if (Objects.equals(n.getNpc().getName(), "TzKal-Zuk") && zukWidgetActive() && plugin.getCurrentWave().containsKey("inferno")
+							&& plugin.getCurrentWave().get("inferno") == 69)
+						{
+							n.setHp(getZukHPfromWidget());
+						}
+					} else
+					{
+						int currentTick = client.getTickCount();
+						int spawnTick = n.getSpawnTick();
+						if (currentTick - spawnTick >= 100 && n.getNpc().getId() != ROCKY_SUPPORT)
+						{
+							if (n.getHp() != n.getMaxHp())
+							{
+								n.addHp(1);
+								n.setSpawnTick(currentTick);
+							}
 						}
 					}
 
@@ -623,6 +686,18 @@ public class DamageHandler extends InfoHandler
 						break;
 				}
 				break;
+			case MAGIC:
+				switch (attackStyle)
+				{
+					case ACCURATE:
+					case AGGRESSIVE:
+						damage = xpDiff / 2.0D;
+						break;
+					case DEFENSIVE:
+						damage = xpDiff / 1.33D;
+						break;
+				}
+				break;
 		}
 
 		//Rounding at end more accurate
@@ -637,30 +712,38 @@ public class DamageHandler extends InfoHandler
 				return;
 
 			processedThisTick = true;
-			boolean isAoe = style == WeaponStyle.CHINS || (client.getLocalPlayer().getAnimation() == BARRAGE || aoeSpellQueued);
-			checkIfInteractingDead(damage, isAoe, interacting.getIndex(), attackStyle, style);
+			AoeStyle aoeStyle = style.getAoeStyle() != null ? style.getAoeStyle()
+				: (client.getLocalPlayer().getAnimation() == BARRAGE
+				|| aoeSpellQueued) ? AoeStyle.BASIC : null;
+			checkIfInteractingDead(damage, aoeStyle, interacting.getIndex(), attackStyle, style);
 		}
 	}
 
-	private void checkIfInteractingDead(int damage, boolean isAoe, int index, AttackStyle attackStyle, WeaponStyle style)
+	private void checkIfInteractingDead(int damage, AoeStyle aoeStyle, int index, AttackStyle attackStyle, WeaponStyle style)
 	{
+		final int savedVenatorBouncesThisTick = this.venatorBouncesThisTick;
 		clientThread.invokeLater(() -> {
 			if (damage != -1)
 			{
-				TzhaarNPC target = findTargetByIndex(index);
+				PluginNPC target = findTargetByIndex(index);
 				if (target != null)
 				{
-					List<TzhaarNPC> clump = getNearbyTzhaarNpcs(target);
-					handleTargetDeath(target, damage, isAoe, attackStyle, style, clump);
+					List<PluginNPC> clump = getAoeTargets(target, aoeStyle);
+					handleTargetDeath(target, damage, aoeStyle != null, attackStyle, style, clump);
+
+					// venator special case: if there are 2 targets but we only heard one bounce, the main target is probably dead
+					if (aoeStyle == AoeStyle.VENATOR && savedVenatorBouncesThisTick == 1 && clump.size() == 3) {
+						target.setDead(true);
+					}
 				}
 				aoeSpellQueued = false;
 			}
 		});
 	}
 
-	private TzhaarNPC findTargetByIndex(int index)
+	private PluginNPC findTargetByIndex(int index)
 	{
-		for (TzhaarNPC n : plugin.getNpcs())
+		for (PluginNPC n : plugin.getNpcs())
 		{
 			if (n.getNpc().getIndex() == index)
 			{
@@ -670,10 +753,23 @@ public class DamageHandler extends InfoHandler
 		return null;
 	}
 
-	private List<TzhaarNPC> getNearbyTzhaarNpcs(TzhaarNPC target)
+	private List<PluginNPC> getAoeTargets(PluginNPC mainTarget, AoeStyle style) {
+		if (style == null) {
+			return List.of(mainTarget);
+		}
+		switch (style) {
+			case BASIC:
+				return getNearbyNpcs(mainTarget);
+			case VENATOR:
+				return VenatorSolver.solve(mainTarget, plugin.getNpcs());
+		}
+		return List.of(mainTarget);
+	}
+
+	private List<PluginNPC> getNearbyNpcs(PluginNPC target)
 	{
-		List<TzhaarNPC> clump = new ArrayList<>();
-		for (TzhaarNPC n : plugin.getNpcs())
+		List<PluginNPC> clump = new ArrayList<>();
+		for (PluginNPC n : plugin.getNpcs())
 		{
 			if (!n.isDead() && n.getNpc().getId() != ROCKY_SUPPORT && n.getNpc().getWorldLocation().distanceTo(target.getNpc().getWorldLocation()) <= 1)
 			{
@@ -683,9 +779,9 @@ public class DamageHandler extends InfoHandler
 		return clump;
 	}
 
-	private void handleTargetDeath(TzhaarNPC target, int damage, boolean isAoe, AttackStyle attackStyle, WeaponStyle style, List<TzhaarNPC> clump)
+	private void handleTargetDeath(PluginNPC target, int damage, boolean isAoe, AttackStyle attackStyle, WeaponStyle style, List<PluginNPC> clump)
 	{
-		if (!isAoe || clump.size() == 1 || client.getVarbitValue(VarbitID.MULTIWAY_INDICATOR) == 0 || (style == WeaponStyle.SCYTHES && attackStyle != AttackStyle.CASTING))
+		if (!isAoe || clump.size() == 1 || client.getVarbitValue(Varbits.MULTICOMBAT_AREA) == 0 || (style == WeaponStyle.SCYTHES && attackStyle != AttackStyle.CASTING))
 		{
 			// Handle normally (clump size = 1) or single combat if AoE
 			target.setQueuedDamage(target.getQueuedDamage() + damage);
@@ -694,16 +790,18 @@ public class DamageHandler extends InfoHandler
 		else
 		{
 			// Handle clump (clump size > 1)
-			if (clump.stream().mapToInt(TzhaarNPC::getHp).sum() <= damage)
+			// note: even though venator bow can return same npc multiple times, unfortunately we need to sum its hp twice
+			// because you get independent xp rolls both times.
+			if (clump.stream().mapToInt(PluginNPC::getHp).sum() <= damage)
 			{
 				clump.forEach(npc -> handleDead(npc, true));
 			}
 		}
 	}
 
-	private void handleDead(TzhaarNPC npc, boolean dead)
+	private void handleDead(PluginNPC npc, boolean dead)
 	{
-		for (TzhaarNPC n : plugin.getNpcs())
+		for (PluginNPC n : plugin.getNpcs())
 		{
 			if (n.getNpc().getIndex() == npc.getNpc().getIndex())
 			{
@@ -727,7 +825,7 @@ public class DamageHandler extends InfoHandler
 	}
 
 	// Copied from Opponent Info
-	private void recalcHP(TzhaarNPC n, int lastRatio, int lastHealthScale)
+	private void recalcHP(PluginNPC n, int lastRatio, int lastHealthScale)
 	{
 		int health;
 		if (lastRatio > 0)

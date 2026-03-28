@@ -27,9 +27,13 @@ package com.tzhaarhptracker;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Provides;
+import com.tzhaarhptracker.attackstyles.WeaponStyle;
+import com.tzhaarhptracker.info.ColosseumHP;
 import com.tzhaarhptracker.info.TzhaarHP;
+import com.tzhaarhptracker.info.VenatorSolver;
 import java.awt.*;
 import java.util.*;
+import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -106,10 +110,12 @@ public class TzhaarHPTrackerPlugin extends Plugin
 	private static final Collection<Integer> allowedBanks = Set.of(9808, 9552, 10063, 10064, 10065);
 
 	@Getter
-	private final ArrayList<TzhaarNPC> npcs = new ArrayList<>();
+	private final ArrayList<PluginNPC> npcs = new ArrayList<>();
+
+	private final Map<Integer, Integer> chunkIdToOrder = new HashMap<Integer, Integer>();
 
 	@Getter
-	private final ArrayList<TzhaarNPC> hiddenNPCs = new ArrayList<>();
+	private final ArrayList<PluginNPC> hiddenNPCs = new ArrayList<>();
 
 	@Getter
 	private static final Set<String> FIGHT_CAVE_NPC = ImmutableSet.of(
@@ -120,6 +126,12 @@ public class TzhaarHPTrackerPlugin extends Plugin
 	private static final Set<String> INFERNO_NPC = ImmutableSet.of(
 		"jal-nib", "jal-mejrah", "jal-ak", "jal-akrek-xil", "jal-akrek-mej", "jal-akrek-ket", "jal-imkot", "jal-xil", "jal-zek",
 		"jaltok-jad", "yt-hurkot", "tzkal-zuk", "jal-mejjak", "<col=00ffff>rocky support</col>"
+	);
+
+	@Getter
+	private static final Set<String> COLOSSEUM_NPC = ImmutableSet.of(
+		"fremennik warband archer", "fremennik warband seer", "fremennik warband berserker", "serpent shaman", "jaguar warrior",
+		"javelin colossus", "manticore", "shockwave colossus", "minotaur"
 	);
 
 	@Getter
@@ -135,6 +147,7 @@ public class TzhaarHPTrackerPlugin extends Plugin
 	private static final int FIGHT_CAVES_REGION = 9551;
 	private static final int INFERNO_REGION = 9043;
 	private static final int JAD_CHALLENGE_VAR = 11878; // 0 = out, 1 = in
+	private static final int COLOSSEUM_REGION = 7216;
 
 	@Getter
 	private String spellbookType = "";
@@ -146,8 +159,10 @@ public class TzhaarHPTrackerPlugin extends Plugin
 
 	private static final Pattern WAVE_START_PATTERN = Pattern.compile(".*Wave: (\\d+).*");
 	private static final String TZHAAR_WAVE_COMPLETE = "Wave completed!";
+	private static final Pattern SOL_WAVE_COMPLETE_PATTERN = Pattern.compile(".*Wave .* completed.*");
 	private static final String ZUK_KC_MESSAGE = "Your TzKal-Zuk kill count is:";
 	private static final String JAD_KC_MESSAGE = "Your TzTok-Jad kill count is:";
+	private static final String SOL_KC_MESSAGE = "Your Sol Heredit kill count is:";
 	private static final String DEATH_MESSAGE = "You have been defeated!";
 
 	@Getter
@@ -158,6 +173,12 @@ public class TzhaarHPTrackerPlugin extends Plugin
 	private int lastTickDurMS = 0;
 
 	private final Hooks.RenderableDrawListener drawListener = this::shouldDraw;
+
+	private Integer lastHoveredNpcIndex = null;
+
+	@Getter
+	final private List<Integer> venatorBounceOrder = new ArrayList<>();
+
 
 	@Provides
 	TzhaarHPTrackerConfig provideConfig(ConfigManager configManager)
@@ -191,15 +212,22 @@ public class TzhaarHPTrackerPlugin extends Plugin
 			eventBus.register(info);
 		}
 
-		if (client.getGameState() == GameState.LOGGED_IN && isInAllowedCaves() && npcs.isEmpty())
+		if (client.getGameState() == GameState.LOGGED_IN
+			&& isInAllowedCaves()
+			&& npcs.isEmpty())
 		{
 			for (NPC npc : client.getTopLevelWorldView().npcs())
 			{
-				if (npc.getName() != null && (INFERNO_NPC.contains(npc.getName()) || FIGHT_CAVE_NPC.contains(npc.getName())))
+				if (npc.getName() != null
+					&& (INFERNO_NPC.contains(npc.getName())
+						|| FIGHT_CAVE_NPC.contains(npc.getName())
+						|| COLOSSEUM_NPC.contains(npc.getName())))
 				{
 					try
 					{
-						if (TzhaarHP.getNPC(npc.getId()) != null)
+						if ((INFERNO_NPC.contains(npc.getName())
+							|| FIGHT_CAVE_NPC.contains(npc.getName())
+							&& TzhaarHP.getNPC(npc.getId()) != null))
 						{
 							int hp = TzhaarHP.getMaxHP(npc.getId()) != 0 ? TzhaarHP.getMaxHP(npc.getId()) : npcManager.getHealth(npc.getId());
 							if (hp != 0)
@@ -208,6 +236,18 @@ public class TzhaarHPTrackerPlugin extends Plugin
 								//Set healed to true -> use ratio + scale to estimate NPCs HP who spawned before plugin startup
 								newNPC.setHealed(true);
 								npcs.add(newNPC);
+							}
+						}
+						else if (COLOSSEUM_NPC.contains(npc.getName()) && ColosseumHP.getNPC(npc.getId()) != null)
+						{
+							int hp = ColosseumHP.getMaxHP(npc.getId()) != 0 ? ColosseumHP.getMaxHP(npc.getId()) : npcManager.getHealth(npc.getId());
+							if (hp != 0)
+							{
+								ColosseumNPC newNPC = new ColosseumNPC(npc, hp, hp, client.getTickCount(), npc.getWorldLocation());
+								//Set healed to true -> use ratio + scale to estimate NPCs HP who spawned before plugin startup
+								newNPC.setHealed(true);
+								npcs.add(newNPC);
+								insertNpcToChunk(newNPC);
 							}
 						}
 					}
@@ -243,7 +283,9 @@ public class TzhaarHPTrackerPlugin extends Plugin
 			NPC npc = e.getNpc();
 			int tick = client.getTickCount();
 
-			if (npc.getName() != null && (INFERNO_NPC.contains(npc.getName().toLowerCase()) || FIGHT_CAVE_NPC.contains(npc.getName().toLowerCase())))
+			if (npc.getName() != null
+				&& (INFERNO_NPC.contains(npc.getName().toLowerCase())
+				|| FIGHT_CAVE_NPC.contains(npc.getName().toLowerCase())))
 			{
 				try
 				{
@@ -265,6 +307,28 @@ public class TzhaarHPTrackerPlugin extends Plugin
 				}
 				catch (NullPointerException ignored)
 				{
+				}
+			}
+			else if (npc.getName() != null
+				&& (COLOSSEUM_NPC.contains(npc.getName().toLowerCase())))
+			{
+				try
+				{
+					if (ColosseumHP.getNPC(npc.getId()) != null)
+					{
+						System.out.println("COLO NPC ID SPAWNED?");
+						int hp = ColosseumHP.getMaxHP(npc.getId()) != 0 ? ColosseumHP.getMaxHP(npc.getId()) : npcManager.getHealth(npc.getId());
+						if (hp != 0)
+						{
+							PluginNPC newNPC = new ColosseumNPC(npc, hp, hp, tick, npc.getWorldLocation());
+							npcs.add(newNPC);
+							insertNpcToChunk(newNPC);
+						}
+					}
+				}
+				catch (NullPointerException ignored)
+				{
+					System.out.println("Exception caused by colosseum npc creation?");
 				}
 			}
 		}
@@ -316,7 +380,7 @@ public class TzhaarHPTrackerPlugin extends Plugin
 		if (config.recolorMenu() && isInAllowedCaves())
 		{
 			NPC npc = client.getTopLevelWorldView().npcs().byIndex(e.getIdentifier());
-			for (TzhaarNPC n : npcs)
+			for (PluginNPC n : npcs)
 			{
 				if (npc != null && npc.getName() != null && n.getNpc() == npc && !EXCLUDED_NPC.contains(npc.getName().toLowerCase()))
 				{
@@ -417,7 +481,7 @@ public class TzhaarHPTrackerPlugin extends Plugin
 		}
 	}
 
-	public Color getDynamicColor(TzhaarNPC n, boolean line)
+	public Color getDynamicColor(PluginNPC n, boolean line)
 	{
 		if (n.getHp() <= 0)
 		{
@@ -487,6 +551,13 @@ public class TzhaarHPTrackerPlugin extends Plugin
 			{
 				hiddenNPCs.clear();
 			}
+			if (isInColosseum())
+			{
+				updateChunks();
+				if (this.lastHoveredNpcIndex != null) {
+					this.npcs.stream().filter(npc -> npc.getNpc().getIndex() == this.lastHoveredNpcIndex).findFirst().ifPresent(this::updateHoveredNpc);
+				}
+			}
 		}
 
 		if (isInAllowedBanks())
@@ -511,6 +582,23 @@ public class TzhaarHPTrackerPlugin extends Plugin
 		}
 	}
 
+	private void updateChunks() {
+		npcs.sort(Comparator.comparing(a -> a.getNpc().getIndex()));
+		for (PluginNPC npc : npcs) {
+			insertNpcToChunk(npc);
+		}
+	}
+
+	private void insertNpcToChunk(PluginNPC npc) {
+		int currentChunkId = npc.getChunkId();
+		if (npc.getChunkOrder() < 0 || currentChunkId != npc.getLastChunk()) {
+			int nextOrder = this.chunkIdToOrder.getOrDefault(currentChunkId, 0) + 1;
+			npc.setChunkOrder(nextOrder);
+			npc.setLastChunk(currentChunkId);
+			this.chunkIdToOrder.put(currentChunkId, nextOrder);
+		}
+	}
+
 	@VisibleForTesting
 	boolean shouldDraw(Renderable renderable, boolean drawingUI)
 	{
@@ -528,7 +616,7 @@ public class TzhaarHPTrackerPlugin extends Plugin
 
 	public boolean isInAllowedCaves()
 	{
-		return isInFightCaves() || isInInferno();
+		return isInFightCaves() || isInInferno() || isInColosseum();
 	}
 
 	public boolean isInFightCaves()
@@ -539,6 +627,11 @@ public class TzhaarHPTrackerPlugin extends Plugin
 	public boolean isInInferno()
 	{
 		return ArrayUtils.contains(client.getTopLevelWorldView().getMapRegions(), INFERNO_REGION);
+	}
+
+	public boolean isInColosseum()
+	{
+		return ArrayUtils.contains(client.getTopLevelWorldView().getMapRegions(), COLOSSEUM_REGION);
 	}
 
 	//10063-10065 is inferno bank region
@@ -553,4 +646,32 @@ public class TzhaarHPTrackerPlugin extends Plugin
 	{
 		return ArrayUtils.contains(client.getTopLevelWorldView().getMapRegions(), INFERNO_REGION) && client.getVarbitValue(JAD_CHALLENGE_VAR) == 1;
 	}
+
+	@Subscribe
+	private void onInteractingChanged(InteractingChanged e)
+	{
+		this.venatorBounceOrder.clear();
+		this.lastHoveredNpcIndex = null;
+		if (isInColosseum())
+		{
+			if (e.getSource() == client.getLocalPlayer())
+			{
+				if (e.getTarget() instanceof NPC)
+				{
+
+					this.npcs.stream().filter(npc -> npc.getNpc() == e.getTarget()).findFirst().ifPresent(npc -> {
+						this.lastHoveredNpcIndex = npc.getNpc().getIndex();
+						updateHoveredNpc(npc);
+					});
+				}
+			}
+		}
+	}
+
+	private void updateHoveredNpc(PluginNPC npc) {
+		this.venatorBounceOrder.clear();
+		if (!config.showVenatorBounce() || handleDamage.getWeaponStyle() != WeaponStyle.VENATOR_BOW) return;
+		this.venatorBounceOrder.addAll(VenatorSolver.solve(npc, this.npcs).stream().map(t -> t.getNpc().getIndex()).collect(Collectors.toList()));
+	}
+
 }

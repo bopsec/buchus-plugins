@@ -55,7 +55,7 @@ public interface TzhaarHPTrackerConfig extends Config
 		position = 1,
 		keyName = "highlightStyle",
 		name = "Highlight Style",
-		description = "Picks the highlight style you want for selected Tzhaar NPCs",
+		description = "Picks the highlight style you want for selected NPCs",
 		section = highlightSection
 	)
 	default Set<HighlightStyle> highlightStyle()
@@ -204,7 +204,7 @@ public interface TzhaarHPTrackerConfig extends Config
 		position = 13,
 		keyName = "hideDead",
 		name = "Hide Dead NPCs",
-		description = "Hides Tzhaar NPCs that are predicted to die",
+		description = "Hides NPCs that are predicted to die",
 		section = highlightSection
 	)
 	default boolean hideDead()
@@ -223,6 +223,43 @@ public interface TzhaarHPTrackerConfig extends Config
 	default int lagProtection()
 	{
 		return 1000;
+	}
+
+	@ConfigItem(
+		position = 15,
+		keyName = "showVenatorBounce",
+		name = "Show Venator Bounce",
+		description = "Show predicted targets for Venator Bounce",
+		section = highlightSection
+	)
+	default boolean showVenatorBounce() {
+		return false;
+	}
+
+	@Alpha
+	@ConfigItem(
+		position = 16,
+		keyName = "venatorBounceLineColor",
+		name = "Venator bounce highlight color",
+		description = "Sets the line color of venator npc highlights",
+		section = highlightSection
+	)
+	default Color lineVenatorColor()
+	{
+		return new Color(255, 64, 255, 160);
+	}
+
+	@Alpha
+	@ConfigItem(
+		position = 17,
+		keyName = "venatorBounceFillColor",
+		name = "Venator bounce fill color",
+		description = "Sets the fill color of venator npc highlights",
+		section = highlightSection
+	)
+	default Color fillVenatorColor()
+	{
+		return new Color(255, 64, 255, 30);
 	}
 
 	//------------------------------------------------------------//
