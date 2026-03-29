@@ -159,7 +159,7 @@ public class TzhaarHPTrackerPlugin extends Plugin
 
 	private static final Pattern WAVE_START_PATTERN = Pattern.compile(".*Wave: (\\d+).*");
 	private static final String TZHAAR_WAVE_COMPLETE = "Wave completed!";
-	private static final Pattern SOL_WAVE_COMPLETE_PATTERN = Pattern.compile(".*Wave .* completed.*");
+	private static final Pattern COLO_WAVE_COMPLETE_PATTERN = Pattern.compile(".*Wave .* completed.*");
 	private static final String ZUK_KC_MESSAGE = "Your TzKal-Zuk kill count is:";
 	private static final String JAD_KC_MESSAGE = "Your TzTok-Jad kill count is:";
 	private static final String SOL_KC_MESSAGE = "Your Sol Heredit kill count is:";
@@ -243,7 +243,7 @@ public class TzhaarHPTrackerPlugin extends Plugin
 							int hp = ColosseumHP.getMaxHP(npc.getId()) != 0 ? ColosseumHP.getMaxHP(npc.getId()) : npcManager.getHealth(npc.getId());
 							if (hp != 0)
 							{
-								ColosseumNPC newNPC = new ColosseumNPC(npc, hp, hp, client.getTickCount(), npc.getWorldLocation());
+								ColosseumNPC newNPC = new ColosseumNPC(npc, hp, hp, client.getTickCount());
 								//Set healed to true -> use ratio + scale to estimate NPCs HP who spawned before plugin startup
 								newNPC.setHealed(true);
 								npcs.add(newNPC);
@@ -320,7 +320,7 @@ public class TzhaarHPTrackerPlugin extends Plugin
 						int hp = ColosseumHP.getMaxHP(npc.getId()) != 0 ? ColosseumHP.getMaxHP(npc.getId()) : npcManager.getHealth(npc.getId());
 						if (hp != 0)
 						{
-							PluginNPC newNPC = new ColosseumNPC(npc, hp, hp, tick, npc.getWorldLocation());
+							PluginNPC newNPC = new ColosseumNPC(npc, hp, hp, tick);
 							npcs.add(newNPC);
 							insertNpcToChunk(newNPC);
 						}
@@ -349,19 +349,22 @@ public class TzhaarHPTrackerPlugin extends Plugin
 			final String message = Text.removeTags(e.getMessage());
 			if (WAVE_START_PATTERN.matcher(message).matches())
 			{
-				String cave = isInInferno() ? "inferno" : "fc";
+				String cave = isInInferno() ? "inferno" : isInFightCaves() ? "fc" : "colosseum";
 				String wave = message.split(": ")[1];
 				currentWave.put(cave, Integer.parseInt(wave));
 
 				waveStarted = true;
 				waveStartTick = client.getTickCount();
 			}
-			else if (TZHAAR_WAVE_COMPLETE.equals(message))
+			else if (TZHAAR_WAVE_COMPLETE.equals(message) || COLO_WAVE_COMPLETE_PATTERN.matcher(message).matches())
 			{
 				waveStarted = false;
 				waveStartTick = -1;
 			}
-			else if (message.startsWith(JAD_KC_MESSAGE) || message.startsWith(ZUK_KC_MESSAGE) || message.equals(DEATH_MESSAGE))
+			else if (message.startsWith(JAD_KC_MESSAGE)
+				|| message.startsWith(ZUK_KC_MESSAGE)
+				|| message.startsWith(SOL_KC_MESSAGE)
+				|| message.equals(DEATH_MESSAGE))
 			{
 				waveStarted = false;
 				waveStartTick = -1;

@@ -249,19 +249,6 @@ public interface TzhaarHPTrackerConfig extends Config
 		return new Color(255, 64, 255, 160);
 	}
 
-	@Alpha
-	@ConfigItem(
-		position = 17,
-		keyName = "venatorBounceFillColor",
-		name = "Venator bounce fill color",
-		description = "Sets the fill color of venator npc highlights",
-		section = highlightSection
-	)
-	default Color fillVenatorColor()
-	{
-		return new Color(255, 64, 255, 30);
-	}
-
 	//------------------------------------------------------------//
 	// Font Settings
 	//------------------------------------------------------------//

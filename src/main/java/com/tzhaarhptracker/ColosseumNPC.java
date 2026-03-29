@@ -24,7 +24,6 @@
  */
 package com.tzhaarhptracker;
 
-import com.tzhaarhptracker.info.ChunkUtils;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -40,8 +39,8 @@ import net.runelite.api.coords.WorldPoint;
 @Setter
 public class ColosseumNPC extends PluginNPC
 {
-	public ColosseumNPC(NPC npc, int currentHp, int maxHp, int tick, WorldPoint location)
+	public ColosseumNPC(NPC npc, int currentHp, int maxHp, int tick)
 	{
-		super(npc, currentHp, maxHp, tick, location);
+		super(npc, currentHp, maxHp, tick);
 	}
 }

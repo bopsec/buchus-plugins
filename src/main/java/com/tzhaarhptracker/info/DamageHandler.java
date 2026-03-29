@@ -157,9 +157,9 @@ public class DamageHandler extends InfoHandler
 
 	private void initAttackStyles()
 	{
-		attackStyleVarbit = client.getVarpValue(VarPlayerID.COM_MODE); // 43
-		equippedWeaponTypeVarbit = client.getVarbitValue(VarbitID.COMBAT_WEAPON_CATEGORY); // 357
-		castingModeVarbit = client.getVarbitValue(VarbitID.AUTOCAST_DEFMODE); // 2668
+		attackStyleVarbit = client.getVarpValue(VarPlayerID.COM_MODE);
+		equippedWeaponTypeVarbit = client.getVarbitValue(VarbitID.COMBAT_WEAPON_CATEGORY);
+		castingModeVarbit = client.getVarbitValue(VarbitID.AUTOCAST_DEFMODE);
 		updateAttackStyle(equippedWeaponTypeVarbit, attackStyleVarbit, castingModeVarbit);
 	}
 
@@ -737,10 +737,8 @@ public class DamageHandler extends InfoHandler
 	{
 		if (!processedThisTick && damage > 0 && skill != null)
 		{
-			System.out.println("we hit a " + damage + " on " + interacting.getName());
 			if (style == WeaponStyle.DINHS)
 				return;
-
 			processedThisTick = true;
 			AoeStyle aoeStyle = null;
 			if (style != null && style.getAoeStyle() != null)
@@ -755,6 +753,9 @@ public class DamageHandler extends InfoHandler
 		}
 	}
 
+	/*
+	 * Checks if the target we are interacting with will die this hit
+	 */
 	private void checkIfInteractingDead(int damage, AoeStyle aoeStyle, int index, AttackStyle attackStyle, WeaponStyle style)
 	{
 		final int savedVenatorBouncesThisTick = this.venatorBouncesThisTick;
@@ -789,6 +790,9 @@ public class DamageHandler extends InfoHandler
 		return null;
 	}
 
+	/*
+	 * Finds AoE targets using mainTarget and AoeStyle (currently only chins/barrage or Venator bow)
+	 */
 	private List<PluginNPC> getAoeTargets(PluginNPC mainTarget, AoeStyle style) {
 		if (style == null) {
 			return List.of(mainTarget);
@@ -802,6 +806,9 @@ public class DamageHandler extends InfoHandler
 		return List.of(mainTarget);
 	}
 
+	/*
+	 * Finds nearby NPCs for chins/barrage AoE
+	 */
 	private List<PluginNPC> getNearbyNpcs(PluginNPC target)
 	{
 		List<PluginNPC> clump = new ArrayList<>();

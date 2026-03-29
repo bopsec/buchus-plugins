@@ -33,16 +33,7 @@ public abstract class PluginNPC
 		this.hp = currentHp;
 		this.spawnTick = tick;
 		this.maxHp = maxHp;
-		this.lastChunk = -1;
-	}
-
-	public PluginNPC(NPC npc, int currentHp, int maxHp, int tick, WorldPoint location)
-	{
-		this.npc = npc;
-		this.hp = currentHp;
-		this.spawnTick = tick;
-		this.maxHp = maxHp;
-		this.lastChunk = getChunkIdFromLocation(location);
+		this.lastChunk = getChunkId();
 	}
 
 	public void addHp(int hp)
