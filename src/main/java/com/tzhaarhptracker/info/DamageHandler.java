@@ -826,9 +826,15 @@ public class DamageHandler extends InfoHandler
 		else
 		{
 			// Handle clump (clump size > 1)
-			// note: even though venator bow can return same npc multiple times, unfortunately we need to sum its hp twice
-			// because you get independent xp rolls both times.
-			if (clump.stream().mapToInt(PluginNPC::getHp).sum() <= damage)
+			int requiredDamage = clump.stream().mapToInt(PluginNPC::getHp).sum();
+			if (style == WeaponStyle.VENATOR_BOW
+				&& clump.size() == 3
+				&& clump.get(0).getNpc().getIndex() == clump.get(2).getNpc().getIndex())
+			{
+				// The first target must survive the opening hit for the second bounce to happen.
+				requiredDamage -= 1;
+			}
+			if (requiredDamage <= damage)
 			{
 				clump.forEach(npc -> handleDead(npc, true));
 			}
