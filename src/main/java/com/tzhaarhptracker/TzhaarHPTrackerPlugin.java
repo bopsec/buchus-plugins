@@ -107,7 +107,7 @@ public class TzhaarHPTrackerPlugin extends Plugin
 		MenuAction.NPC_FIFTH_OPTION, MenuAction.WIDGET_TARGET_ON_NPC, MenuAction.ITEM_USE_ON_NPC
 	);
 
-	private static final Collection<Integer> allowedBanks = Set.of(9808, 9552, 10063, 10064, 10065);
+	private static final Collection<Integer> allowedBanks = Set.of(7316, 9808, 9552, 10063, 10064, 10065);
 
 	@Getter
 	private final ArrayList<PluginNPC> npcs = new ArrayList<>();
@@ -415,7 +415,8 @@ public class TzhaarHPTrackerPlugin extends Plugin
 		if (isInAllowedBanks() && (config.spellbookWarning() == TzhaarHPTrackerConfig.spellbookWarningMode.REMOVE
 			|| config.spellbookWarning() == TzhaarHPTrackerConfig.spellbookWarningMode.BOTH))
 		{
-			if ((option.contains("jump-in") && target.contains("the inferno")) || (option.contains("enter") && target.contains("cave entrance")))
+			if ((option.contains("jump-in") && target.contains("the inferno"))  // Inferno
+				|| (option.contains("enter") && target.contains("entrance"))) // fc and colosseum
 			{
 				if (!config.spellbookCheck().contains(TzhaarHPTrackerConfig.spellbook.NORMAL) && spellbookType.equals("NORMAL"))
 				{
@@ -531,7 +532,7 @@ public class TzhaarHPTrackerPlugin extends Plugin
 					GameObject[] gameObjects = t.getGameObjects();
 					if (gameObjects != null)
 					{
-						objects.addAll(Arrays.stream(gameObjects).filter(o -> o != null && (o.getId() == 11833 || o.getId() == 30352)
+						objects.addAll(Arrays.stream(gameObjects).filter(o -> o != null && (o.getId() == 11833 || o.getId() == 30352 || o.getId() == 50751)
 							&& o.getWorldLocation().distanceTo(client.getLocalPlayer().getWorldLocation()) <= 30 && !objects.contains(o)).collect(Collectors.toList()));
 					}
 				}
