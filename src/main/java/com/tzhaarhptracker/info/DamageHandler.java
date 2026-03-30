@@ -45,8 +45,6 @@ import net.runelite.api.HitsplatID;
 import net.runelite.api.MenuAction;
 import net.runelite.api.NPC;
 import net.runelite.api.Skill;
-import net.runelite.api.VarPlayer;
-import net.runelite.api.Varbits;
 import net.runelite.api.events.FakeXpDrop;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
@@ -57,6 +55,7 @@ import net.runelite.api.events.SoundEffectPlayed;
 import net.runelite.api.events.StatChanged;
 import net.runelite.api.events.VarbitChanged;
 import net.runelite.api.gameval.InterfaceID;
+import net.runelite.api.gameval.NpcID;
 import net.runelite.api.gameval.VarPlayerID;
 import net.runelite.api.gameval.VarbitID;
 import net.runelite.api.kit.KitType;
@@ -70,14 +69,12 @@ import com.tzhaarhptracker.TzhaarHPTrackerConfig;
 import com.tzhaarhptracker.TzhaarHPTrackerPlugin;
 import com.tzhaarhptracker.attackstyles.WeaponMap;
 import com.tzhaarhptracker.InfoHandler;
-import com.tzhaarhptracker.TzhaarNPC;
 import com.tzhaarhptracker.attackstyles.AttackStyle;
 import com.tzhaarhptracker.attackstyles.WeaponStyle;
 import com.tzhaarhptracker.attackstyles.WeaponType;
 import net.runelite.client.ui.overlay.OverlayManager;
 import net.runelite.client.util.Text;
 import org.apache.commons.lang3.ObjectUtils;
-import static net.runelite.api.NpcID.*;
 
 @Slf4j
 public class DamageHandler extends InfoHandler
@@ -345,7 +342,7 @@ public class DamageHandler extends InfoHandler
 						ColosseumHP hpInfo = ColosseumHP.getNPC(n.getNpc().getId());
 						int regenInterval = hpInfo != null ? hpInfo.getRegenInterval() : 100;
 						int regenAmount = hpInfo != null ? hpInfo.getRegenAmount() : 1;
-						if (currentTick - spawnTick >= regenInterval && n.getNpc().getId() != ROCKY_SUPPORT)
+						if (currentTick - spawnTick >= regenInterval && n.getNpc().getId() != NpcID.INFERNO_INVISIBLE_3X3)
 						{
 							if (n.getHp() != n.getMaxHp())
 							{
@@ -391,7 +388,7 @@ public class DamageHandler extends InfoHandler
 					{
 						int currentTick = client.getTickCount();
 						int spawnTick = n.getSpawnTick();
-						if (currentTick - spawnTick >= 100 && n.getNpc().getId() != ROCKY_SUPPORT)
+						if (currentTick - spawnTick >= 100 && n.getNpc().getId() != NpcID.INFERNO_INVISIBLE_3X3)
 						{
 							if (n.getHp() != n.getMaxHp())
 							{
@@ -814,7 +811,7 @@ public class DamageHandler extends InfoHandler
 		List<PluginNPC> clump = new ArrayList<>();
 		for (PluginNPC n : plugin.getNpcs())
 		{
-			if (!n.isDead() && n.getNpc().getId() != ROCKY_SUPPORT && n.getNpc().getWorldLocation().distanceTo(target.getNpc().getWorldLocation()) <= 1)
+			if (!n.isDead() && n.getNpc().getId() != NpcID.INFERNO_INVISIBLE_3X3 && n.getNpc().getWorldLocation().distanceTo(target.getNpc().getWorldLocation()) <= 1)
 			{
 				clump.add(n);
 			}

@@ -656,13 +656,13 @@ public class TzhaarHPTrackerPlugin extends Plugin
 	{
 		this.venatorBounceOrder.clear();
 		this.lastHoveredNpcIndex = null;
-		if (isInColosseum())
+		if (isInAllowedCaves())
 		{
+			if (!config.showVenatorBounce() || handleDamage.getWeaponStyle() != WeaponStyle.VENATOR_BOW) return;
 			if (e.getSource() == client.getLocalPlayer())
 			{
 				if (e.getTarget() instanceof NPC)
 				{
-
 					this.npcs.stream().filter(npc -> npc.getNpc() == e.getTarget()).findFirst().ifPresent(npc -> {
 						this.lastHoveredNpcIndex = npc.getNpc().getIndex();
 						updateHoveredNpc(npc);
