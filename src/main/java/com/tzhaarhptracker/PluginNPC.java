@@ -7,7 +7,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.NPC;
-import net.runelite.api.coords.WorldPoint;
 
 @Slf4j
 @Data
@@ -49,10 +48,6 @@ public abstract class PluginNPC
 	public int getChunkId()
 	{
 		return ChunkUtils.getChunkForNpc(this.npc);
-	}
-
-	public int getChunkIdFromLocation(WorldPoint p) {
-		return ChunkUtils.getChunkForLocation(p);
 	}
 }
 
