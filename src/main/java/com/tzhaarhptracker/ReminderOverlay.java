@@ -74,7 +74,6 @@ public class ReminderOverlay extends Overlay
 					}
 
 					Shape clickbox = obj.getClickbox();
-					System.out.println("we are finding clickbox?");
 					if (color != null && clickbox != null)
 					{
 						Point mousePos = client.getMouseCanvasPosition();
@@ -86,7 +85,6 @@ public class ReminderOverlay extends Overlay
 						graphics.fill(clickbox);
 						graphics.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue()));
 						graphics.draw(clickbox);
-						System.out.println("clickbox coloured.");
 					}
 				}
 			}
