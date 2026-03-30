@@ -60,9 +60,9 @@ import org.apache.commons.lang3.ArrayUtils;
 
 @Slf4j
 @PluginDescriptor(
-	name = "Tzhaar HP Tracker",
-	description = "Marks Tzhaar NPCs and shows their current HP remaining",
-	tags = {"inferno", "fight", "cave", "tzhaar", "jad", "zuk", "hp", "tracking", "dead", "npc", "indicator"}
+	name = "Tzhaar/Colo HP Tracker",
+	description = "Marks Tzhaar and Colo NPCs and shows their current HP remaining",
+	tags = {"inferno", "fight", "cave", "tzhaar", "jad", "zuk", "hp", "tracking", "dead", "npc", "indicator", "colosseum"}
 )
 public class TzhaarHPTrackerPlugin extends Plugin
 {
