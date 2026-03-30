@@ -42,7 +42,6 @@ import javax.inject.Inject;
 import net.runelite.api.Client;
 import net.runelite.api.NPC;
 import net.runelite.api.NPCComposition;
-import static net.runelite.api.NpcID.ROCKY_SUPPORT;
 import net.runelite.api.Perspective;
 import net.runelite.api.Point;
 import net.runelite.api.WorldView;
@@ -137,7 +136,7 @@ public class TzhaarHPTrackerOverlay extends Overlay
 						int size = npcComposition.getSize();
 
 						//Only highlights NPCs - not pillars
-						if (n.getNpc().getId() != ROCKY_SUPPORT)
+						if (n.getNpc().getId() != NpcID.INFERNO_INVISIBLE_3X3)
 						{
 							if (config.highlightStyle().contains(TzhaarHPTrackerConfig.HighlightStyle.TILE))
 							{
@@ -247,8 +246,8 @@ public class TzhaarHPTrackerOverlay extends Overlay
 								modelOutlineRenderer.drawOutline(n.getNpc(), (int) config.highlightThiCC(), line, 4);
 							}
 						}
-						if ((config.showHp() != TzhaarHPTrackerConfig.HpLocation.OFF && n.getNpc().getId() != ROCKY_SUPPORT)
-							|| (config.showPillarHp() != TzhaarHPTrackerConfig.HpLocation.OFF && n.getNpc().getId() == ROCKY_SUPPORT))
+						if ((config.showHp() != TzhaarHPTrackerConfig.HpLocation.OFF && n.getNpc().getId() != NpcID.INFERNO_INVISIBLE_3X3)
+							|| (config.showPillarHp() != TzhaarHPTrackerConfig.HpLocation.OFF && n.getNpc().getId() == NpcID.INFERNO_INVISIBLE_3X3))
 						{
 							drawHp(graphics, stackedNpcs, n);
 						}
