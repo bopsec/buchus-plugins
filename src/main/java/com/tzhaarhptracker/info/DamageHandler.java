@@ -312,21 +312,21 @@ public class DamageHandler extends InfoHandler
 						case RANGED:
 							//Long range should be calculated with range only
 							hit = calculateHitOnNpc(lastOpponentID, attackStyle == AttackStyle.LONGRANGE ? Skill.RANGED : xp.getKey(), xp.getValue(), attackStyle, weaponStyle);
-							processHit(hit, xp.getKey(), attackStyle, weaponStyle, (NPC) lastOpponent);
+							processHit(hit, xp.getValue(), xp.getKey(), attackStyle, weaponStyle, (NPC) lastOpponent);
 							break;
 						case HITPOINTS:
 							if (attackStyle == AttackStyle.CASTING)
 							{
 								//Only calculate magic damage using hitpoints if it's not defensive casting
 								hit = calculateHitOnNpc(lastOpponentID, xp.getKey(), xp.getValue(), attackStyle, weaponStyle);
-								processHit(hit, xp.getKey(), attackStyle, weaponStyle, (NPC) lastOpponent);
+								processHit(hit, xp.getValue(), xp.getKey(), attackStyle, weaponStyle, (NPC) lastOpponent);
 							}
 							break;
 						case MAGIC:
 							if (attackStyle != AttackStyle.CASTING) // powered staff
 							{
 								hit = calculateHitOnNpc(lastOpponentID, xp.getKey(), xp.getValue(), attackStyle, weaponStyle);
-								processHit(hit, xp.getKey(), attackStyle, weaponStyle, (NPC) lastOpponent);
+								processHit(hit, xp.getValue(), xp.getKey(), attackStyle, weaponStyle, (NPC) lastOpponent);
 							}
 							break;
 					}
@@ -584,20 +584,20 @@ public class DamageHandler extends InfoHandler
 							//Long range should be calculated with range only
 							hit = calculateHitOnNpc(lastOpponentID, attackStyle == AttackStyle.LONGRANGE ? Skill.RANGED : e.getSkill(),
 								currentXp - previousXp, attackStyle, weaponStyle);
-							processHit(hit, e.getSkill(), attackStyle, weaponStyle, (NPC) lastOpponent);
+							processHit(hit, currentXp - previousXp, e.getSkill(), attackStyle, weaponStyle, (NPC) lastOpponent);
 							break;
 						case HITPOINTS:
 							if (attackStyle == AttackStyle.CASTING)
 							{
 								hit = calculateHitOnNpc(lastOpponentID, e.getSkill(), currentXp - previousXp, attackStyle, weaponStyle);
-								processHit(hit, e.getSkill(), attackStyle, weaponStyle, (NPC) lastOpponent);
+								processHit(hit, currentXp - previousXp, e.getSkill(), attackStyle, weaponStyle, (NPC) lastOpponent);
 							}
 							break;
 						case MAGIC:
 							if (weaponStyle == WeaponStyle.TRIDENTS)
 							{
 								hit = calculateHitOnNpc(lastOpponentID, e.getSkill(), currentXp - previousXp, attackStyle, weaponStyle);
-								processHit(hit, e.getSkill(), attackStyle, weaponStyle, (NPC) lastOpponent);
+								processHit(hit, currentXp - previousXp, e.getSkill(), attackStyle, weaponStyle, (NPC) lastOpponent);
 							}
 							break;
 					}
@@ -733,7 +733,7 @@ public class DamageHandler extends InfoHandler
 		return (int) Math.round(damage / modifier / configModifier);
 	}
 
-	private void processHit(int damage, Skill skill, AttackStyle attackStyle, WeaponStyle style, NPC interacting)
+	private void processHit(int damage, int xpDiff, Skill skill, AttackStyle attackStyle, WeaponStyle style, NPC interacting)
 	{
 		if (!processedThisTick && damage > 0 && skill != null)
 		{
@@ -749,14 +749,14 @@ public class DamageHandler extends InfoHandler
 			{
 				aoeStyle = AoeStyle.BASIC;
 			}
-			checkIfInteractingDead(damage, aoeStyle, interacting.getIndex(), attackStyle, style);
+			checkIfInteractingDead(damage, xpDiff, aoeStyle, interacting.getIndex(), skill, attackStyle, style);
 		}
 	}
 
 	/*
 	 * Checks if the target we are interacting with will die this hit
 	 */
-	private void checkIfInteractingDead(int damage, AoeStyle aoeStyle, int index, AttackStyle attackStyle, WeaponStyle style)
+	private void checkIfInteractingDead(int damage, int xpDiff, AoeStyle aoeStyle, int index, Skill skill, AttackStyle attackStyle, WeaponStyle style)
 	{
 		final int savedVenatorBouncesThisTick = this.venatorBouncesThisTick;
 		clientThread.invokeLater(() -> {
@@ -766,7 +766,7 @@ public class DamageHandler extends InfoHandler
 				if (target != null)
 				{
 					List<PluginNPC> clump = getAoeTargets(target, aoeStyle);
-					handleTargetDeath(target, damage, aoeStyle != null, attackStyle, style, clump);
+					handleTargetDeath(target, damage, xpDiff, aoeStyle, skill, attackStyle, style, clump);
 
 					// venator special case: if there are 2 targets but we only heard one bounce, the main target is probably dead
 					if (aoeStyle == AoeStyle.VENATOR && savedVenatorBouncesThisTick == 1 && clump.size() == 3) {
@@ -822,9 +822,10 @@ public class DamageHandler extends InfoHandler
 		return clump;
 	}
 
-	private void handleTargetDeath(PluginNPC target, int damage, boolean isAoe, AttackStyle attackStyle, WeaponStyle style, List<PluginNPC> clump)
+	private void handleTargetDeath(PluginNPC target, int damage, int xpDiff, AoeStyle aoeStyle, Skill skill, AttackStyle attackStyle, WeaponStyle style, List<PluginNPC> clump)
 	{
-		if (!isAoe || clump.size() == 1 || client.getVarbitValue(Varbits.MULTICOMBAT_AREA) == 0 || (style == WeaponStyle.SCYTHES && attackStyle != AttackStyle.CASTING))
+		boolean isAoe = aoeStyle != null;
+		if (!isAoe || clump.size() == 1 || client.getVarbitValue(VarbitID.MULTIWAY_INDICATOR) == 0 || (style == WeaponStyle.SCYTHES && attackStyle != AttackStyle.CASTING))
 		{
 			// Handle normally (clump size = 1) or single combat if AoE
 			target.setQueuedDamage(target.getQueuedDamage() + damage);
@@ -833,19 +834,55 @@ public class DamageHandler extends InfoHandler
 		else
 		{
 			// Handle clump (clump size > 1)
-			int requiredDamage = clump.stream().mapToInt(PluginNPC::getHp).sum();
-			if (style == WeaponStyle.VENATOR_BOW
+			if (aoeStyle == AoeStyle.BASIC)
+			{
+				int weightedDamage = getWeightedAoeDamage(xpDiff, skill, attackStyle, style);
+				int requiredDamage = (int) Math.round(getRequiredWeightedDamage(clump));
+				if (requiredDamage <= weightedDamage)
+				{
+					clump.forEach(npc -> handleDead(npc, true));
+				}
+			}
+			else if (style == WeaponStyle.VENATOR_BOW
 				&& clump.size() == 3
 				&& clump.get(0).getNpc().getIndex() == clump.get(2).getNpc().getIndex())
 			{
 				// The first target must survive the opening hit for the second bounce to happen.
-				requiredDamage -= 1;
+				int requiredDamage = clump.stream().mapToInt(PluginNPC::getHp).sum() - 1;
+				if (requiredDamage <= damage)
+				{
+					clump.forEach(npc -> handleDead(npc, true));
+				}
 			}
-			if (requiredDamage <= damage)
+			else
 			{
-				clump.forEach(npc -> handleDead(npc, true));
+				int requiredDamage = clump.stream().mapToInt(PluginNPC::getHp).sum();
+				if (requiredDamage <= damage)
+				{
+					clump.forEach(npc -> handleDead(npc, true));
+				}
 			}
 		}
+	}
+
+	private int getWeightedAoeDamage(int xpDiff, Skill skill, AttackStyle attackStyle, WeaponStyle style)
+	{
+		return calculateHit(skill, xpDiff, attackStyle, style, 1.0d, config.xpMultiplier());
+	}
+
+	private double getRequiredWeightedDamage(List<PluginNPC> clump)
+	{
+		double requiredDamage = 0;
+		for (PluginNPC npc : clump)
+		{
+			requiredDamage += npc.getHp() * getXpModifier(npc.getNpc().getId());
+		}
+		return requiredDamage;
+	}
+
+	private double getXpModifier(int npcId)
+	{
+		return (XPModifiers.getXpMod(npcId) + 100) / 100.0d;
 	}
 
 	private void handleDead(PluginNPC npc, boolean dead)
