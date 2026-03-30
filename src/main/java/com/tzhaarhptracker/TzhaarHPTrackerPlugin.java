@@ -316,7 +316,6 @@ public class TzhaarHPTrackerPlugin extends Plugin
 				{
 					if (ColosseumHP.getNPC(npc.getId()) != null)
 					{
-						System.out.println("COLO NPC ID SPAWNED?");
 						int hp = ColosseumHP.getMaxHP(npc.getId()) != 0 ? ColosseumHP.getMaxHP(npc.getId()) : npcManager.getHealth(npc.getId());
 						if (hp != 0)
 						{
@@ -328,7 +327,6 @@ public class TzhaarHPTrackerPlugin extends Plugin
 				}
 				catch (NullPointerException ignored)
 				{
-					System.out.println("Exception caused by colosseum npc creation?");
 				}
 			}
 		}
