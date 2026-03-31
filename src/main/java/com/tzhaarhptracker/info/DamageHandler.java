@@ -310,7 +310,7 @@ public class DamageHandler extends InfoHandler
 						case RANGED:
 							if (weaponStyle == WeaponStyle.TRIDENTS)
 							{
-								// Powered staves can produce fake defence XP on longrange; infer damage from magic XP instead.
+								// infer damage from magic XP instead.
 								break;
 							}
 							//Long range should be calculated with range only
