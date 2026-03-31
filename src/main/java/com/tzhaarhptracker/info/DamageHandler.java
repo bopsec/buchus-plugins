@@ -39,6 +39,7 @@ import javax.inject.Inject;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Actor;
+import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.HitsplatID;
@@ -307,6 +308,11 @@ public class DamageHandler extends InfoHandler
 						case STRENGTH:
 						case DEFENCE:
 						case RANGED:
+							if (weaponStyle == WeaponStyle.TRIDENTS)
+							{
+								// Powered staves can produce fake defence XP on longrange; infer damage from magic XP instead.
+								break;
+							}
 							//Long range should be calculated with range only
 							hit = calculateHitOnNpc(lastOpponentID, attackStyle == AttackStyle.LONGRANGE ? Skill.RANGED : xp.getKey(), xp.getValue(), attackStyle, weaponStyle);
 							processHit(hit, xp.getValue(), xp.getKey(), attackStyle, weaponStyle, (NPC) lastOpponent);
@@ -616,6 +622,7 @@ public class DamageHandler extends InfoHandler
 			case STRENGTH:
 			case DEFENCE:
 			case RANGED:
+			case MAGIC:
 			case HITPOINTS: //HP used instead of magic
 				final int currentXp = fakeXpMap.getOrDefault(e.getSkill(), 0);
 				fakeXpMap.put(e.getSkill(), currentXp + e.getXp());
@@ -713,6 +720,21 @@ public class DamageHandler extends InfoHandler
 				}
 				break;
 			case MAGIC:
+				if (weaponStyle == WeaponStyle.TRIDENTS)
+				{
+					switch (attackStyle)
+					{
+						case LONGRANGE:
+						case DEFENSIVE:
+						case DEFENSIVE_CASTING:
+							damage = xpDiff / 1.33D;
+							break;
+						default:
+							damage = xpDiff / 2.0D;
+							break;
+					}
+					break;
+				}
 				switch (attackStyle)
 				{
 					case ACCURATE:
@@ -737,6 +759,7 @@ public class DamageHandler extends InfoHandler
 			if (style == WeaponStyle.DINHS)
 				return;
 			processedThisTick = true;
+			//client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "TzHaar HP Tracker hit: " + damage, null);
 			AoeStyle aoeStyle = null;
 			if (style != null && style.getAoeStyle() != null)
 			{
