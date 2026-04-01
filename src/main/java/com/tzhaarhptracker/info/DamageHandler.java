@@ -497,7 +497,8 @@ public class DamageHandler extends InfoHandler
 						{
 							if (target.toLowerCase().startsWith(spell + " ->") && e.getMenuEntry().getNpc() != null && e.getMenuEntry().getNpc().getName() != null
 								&& (TzhaarHPTrackerPlugin.getINFERNO_NPC().contains(e.getMenuEntry().getNpc().getName().toLowerCase())
-								|| TzhaarHPTrackerPlugin.getFIGHT_CAVE_NPC().contains(e.getMenuEntry().getNpc().getName().toLowerCase())))
+								|| TzhaarHPTrackerPlugin.getFIGHT_CAVE_NPC().contains(e.getMenuEntry().getNpc().getName().toLowerCase())
+								|| TzhaarHPTrackerPlugin.getCOLOSSEUM_NPC().contains(e.getMenuEntry().getNpc().getName().toLowerCase())))
 							{
 								aoeSpellQueued = true;
 							}
@@ -787,11 +788,6 @@ public class DamageHandler extends InfoHandler
 				{
 					List<PluginNPC> clump = getAoeTargets(target, aoeStyle);
 					handleTargetDeath(target, damage, xpDiff, aoeStyle, skill, attackStyle, style, clump);
-
-					// venator special case: if there are 2 targets but we only heard one bounce, the main target is probably dead
-					if (aoeStyle == AoeStyle.VENATOR && savedVenatorBouncesThisTick == 1 && clump.size() == 3) {
-						target.setDead(true);
-					}
 				}
 				aoeSpellQueued = false;
 			}
@@ -867,8 +863,10 @@ public class DamageHandler extends InfoHandler
 				&& clump.size() == 3
 				&& clump.get(0).getNpc().getIndex() == clump.get(2).getNpc().getIndex())
 			{
-				// The first target must survive the opening hit for the second bounce to happen.
-				int requiredDamage = clump.stream().mapToInt(PluginNPC::getHp).sum() - 1;
+				// If only one bounce was heard, only two effective hits landed, so A+B dmg is confirmed both died
+				int requiredDamage = venatorBouncesThisTick == 1
+					? clump.get(0).getHp() + clump.get(1).getHp()
+					: clump.stream().mapToInt(PluginNPC::getHp).sum() - 1;
 				if (requiredDamage <= damage)
 				{
 					clump.forEach(npc -> handleDead(npc, true));
