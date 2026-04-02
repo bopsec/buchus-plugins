@@ -676,4 +676,10 @@ public class TzhaarHPTrackerPlugin extends Plugin
 		this.venatorBounceOrder.addAll(VenatorSolver.solve(npc, this.npcs).stream().map(t -> t.getNpc().getIndex()).collect(Collectors.toList()));
 	}
 
+	public void debugPrint(String msg) {
+		if (config.debug()) {
+			client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", msg, null);
+		}
+	}
+
 }

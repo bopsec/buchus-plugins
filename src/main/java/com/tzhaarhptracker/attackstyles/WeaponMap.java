@@ -1062,5 +1062,7 @@ public class WeaponMap
 		StyleMap.put(ItemID.TOTS_I_UNCHARGED, WeaponStyle.TRIDENTS);
 		StyleMap.put(ItemID.WARPED_SCEPTRE, WeaponStyle.TRIDENTS);
 		StyleMap.put(ItemID.WARPED_SCEPTRE_UNCHARGED, WeaponStyle.TRIDENTS);
+		StyleMap.put(ItemID.EYE_OF_AYAK, WeaponStyle.TRIDENTS);
+		StyleMap.put(ItemID.EYE_OF_AYAK_UNCHARGED, WeaponStyle.TRIDENTS);
 	}
 }

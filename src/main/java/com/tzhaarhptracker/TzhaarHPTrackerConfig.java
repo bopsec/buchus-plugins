@@ -427,6 +427,26 @@ public interface TzhaarHPTrackerConfig extends Config
 		return new Color(255, 0, 0, 50);
 	}
 
+	//
+ 	// Debug
+	//
+	@ConfigSection(
+		name = "Debug",
+		description = "Debug Settings",
+		position = 99,
+		closedByDefault = true
+	)
+	String debugSection = "debug";
+
+	@ConfigItem(
+		keyName = "debug",
+		name = "Debug",
+		description = "",
+		position = 1,
+		section = debugSection
+	)
+	default boolean debug() { return false; }
+
 	//------------------------------------------------------------//
 	// Highlight Enums
 	//------------------------------------------------------------//

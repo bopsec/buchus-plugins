@@ -760,7 +760,6 @@ public class DamageHandler extends InfoHandler
 			if (style == WeaponStyle.DINHS)
 				return;
 			processedThisTick = true;
-			//client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "TzHaar HP Tracker hit: " + damage, null);
 			AoeStyle aoeStyle = null;
 			if (style != null && style.getAoeStyle() != null)
 			{
@@ -844,6 +843,7 @@ public class DamageHandler extends InfoHandler
 		if (!isAoe || clump.size() == 1 || client.getVarbitValue(VarbitID.MULTIWAY_INDICATOR) == 0 || (style == WeaponStyle.SCYTHES && attackStyle != AttackStyle.CASTING))
 		{
 			// Handle normally (clump size = 1) or single combat if AoE
+			plugin.debugPrint("We hit a " + damage + " on " + target.getHp());
 			target.setQueuedDamage(target.getQueuedDamage() + damage);
 			handleDead(target, target.getQueuedDamage() >= target.getHp());
 		}
@@ -854,6 +854,7 @@ public class DamageHandler extends InfoHandler
 			{
 				int weightedDamage = getWeightedAoeDamage(xpDiff, skill, attackStyle, style);
 				int requiredDamage = (int) Math.round(getRequiredWeightedDamage(clump));
+				plugin.debugPrint("We hit a weighted " + weightedDamage + " against " + requiredDamage);
 				if (requiredDamage <= weightedDamage)
 				{
 					clump.forEach(npc -> handleDead(npc, true));
