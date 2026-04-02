@@ -248,6 +248,14 @@ public interface TzhaarHPTrackerConfig extends Config
 	{
 		return new Color(255, 64, 255, 160);
 	}
+	@ConfigItem(
+		position = 17,
+		keyName = "hideWarbands",
+		name = "Hide dead fremenniks",
+		description = "Instantly hide Warbands on killing xp drop, overrides Hide Dead NPCs",
+		section = highlightSection
+	)
+	default boolean hideWarbands() { return false; }
 
 	//------------------------------------------------------------//
 	// Font Settings

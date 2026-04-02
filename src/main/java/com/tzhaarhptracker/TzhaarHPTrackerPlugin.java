@@ -41,6 +41,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
 import net.runelite.api.events.*;
+import net.runelite.api.gameval.NpcID;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.callback.Hooks;
 import net.runelite.client.config.ConfigManager;
@@ -604,15 +605,27 @@ public class TzhaarHPTrackerPlugin extends Plugin
 	@VisibleForTesting
 	boolean shouldDraw(Renderable renderable, boolean drawingUI)
 	{
-		if (config.hideDead())
+		if (renderable instanceof NPC)
 		{
-			if (renderable instanceof NPC)
+			NPC renderedNpc = (NPC) renderable;
+
+			for (PluginNPC npc : hiddenNPCs)
 			{
-				//Excluded NPCs should not be hidden -> too much HP + healing
-				return hiddenNPCs.stream().noneMatch(n -> n.getNpc().getIndex() == ((NPC) renderable).getIndex() && n.isDead()
-					&& !EXCLUDED_NPC.contains(Objects.requireNonNull(n.getNpc().getName()).toLowerCase()));
+				if (npc.getNpc().getIndex() == renderedNpc.getIndex() && npc.isDead())
+				{
+					boolean normalHide = config.hideDead()
+						&& !EXCLUDED_NPC.contains(Objects.requireNonNull(npc.getNpc().getName()).toLowerCase());
+
+					boolean forceHideWarband = shouldForceHide(npc);
+
+					if (normalHide || forceHideWarband)
+					{
+						return false;
+					}
+				}
 			}
 		}
+
 		return true;
 	}
 
@@ -674,6 +687,19 @@ public class TzhaarHPTrackerPlugin extends Plugin
 		this.venatorBounceOrder.clear();
 		if (!config.showVenatorBounce() || handleDamage.getWeaponStyle() != WeaponStyle.VENATOR_BOW) return;
 		this.venatorBounceOrder.addAll(VenatorSolver.solve(npc, this.npcs).stream().map(t -> t.getNpc().getIndex()).collect(Collectors.toList()));
+	}
+
+	private boolean shouldForceHide(PluginNPC npc)
+	{
+		if (!isInColosseum() || !config.hideWarbands())
+		{
+			return false;
+		}
+
+		int id = npc.getNpc().getId();
+		return id == net.runelite.api.gameval.NpcID.COLOSSEUM_WARBANDER_RANGED_FEMALE
+			|| id == net.runelite.api.gameval.NpcID.COLOSSEUM_WARBANDER_MAGE_MALE
+			|| id == NpcID.COLOSSEUM_WARBANDER_MELEE_MALE;
 	}
 
 	public void debugPrint(String msg) {
