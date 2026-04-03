@@ -310,7 +310,7 @@ public class DamageHandler extends InfoHandler
 						case RANGED:
 							if (weaponStyle == WeaponStyle.TRIDENTS)
 							{
-								// infer damage from magic XP instead.
+								// infer damage from hp xp instead
 								break;
 							}
 							//Long range should be calculated with range only
@@ -318,16 +318,9 @@ public class DamageHandler extends InfoHandler
 							processHit(hit, xp.getValue(), xp.getKey(), attackStyle, weaponStyle, (NPC) lastOpponent);
 							break;
 						case HITPOINTS:
-							if (attackStyle == AttackStyle.CASTING)
+							if (attackStyle == AttackStyle.CASTING || weaponStyle == WeaponStyle.TRIDENTS)
 							{
 								//Only calculate magic damage using hitpoints if it's not defensive casting
-								hit = calculateHitOnNpc(lastOpponentID, xp.getKey(), xp.getValue(), attackStyle, weaponStyle);
-								processHit(hit, xp.getValue(), xp.getKey(), attackStyle, weaponStyle, (NPC) lastOpponent);
-							}
-							break;
-						case MAGIC:
-							if (attackStyle != AttackStyle.CASTING) // powered staff
-							{
 								hit = calculateHitOnNpc(lastOpponentID, xp.getKey(), xp.getValue(), attackStyle, weaponStyle);
 								processHit(hit, xp.getValue(), xp.getKey(), attackStyle, weaponStyle, (NPC) lastOpponent);
 							}
@@ -582,7 +575,7 @@ public class DamageHandler extends InfoHandler
 						case DEFENCE:
 						case RANGED:
 							if (weaponStyle == WeaponStyle.TRIDENTS) {
-								// gained defence XP from longrange, use MAGIC handler for this.
+								// infer damage from hp xp instead
 								break;
 							}
 							//Long range should be calculated with range only
@@ -591,14 +584,7 @@ public class DamageHandler extends InfoHandler
 							processHit(hit, currentXp - previousXp, e.getSkill(), attackStyle, weaponStyle, (NPC) lastOpponent);
 							break;
 						case HITPOINTS:
-							if (attackStyle == AttackStyle.CASTING)
-							{
-								hit = calculateHitOnNpc(lastOpponentID, e.getSkill(), currentXp - previousXp, attackStyle, weaponStyle);
-								processHit(hit, currentXp - previousXp, e.getSkill(), attackStyle, weaponStyle, (NPC) lastOpponent);
-							}
-							break;
-						case MAGIC:
-							if (weaponStyle == WeaponStyle.TRIDENTS)
+							if (attackStyle == AttackStyle.CASTING || weaponStyle == WeaponStyle.TRIDENTS)
 							{
 								hit = calculateHitOnNpc(lastOpponentID, e.getSkill(), currentXp - previousXp, attackStyle, weaponStyle);
 								processHit(hit, currentXp - previousXp, e.getSkill(), attackStyle, weaponStyle, (NPC) lastOpponent);
@@ -703,7 +689,8 @@ public class DamageHandler extends InfoHandler
 				}
 				break;
 			case HITPOINTS:
-				if (attackStyle == AttackStyle.CASTING)
+				if (attackStyle == AttackStyle.CASTING
+				|| weaponStyle == WeaponStyle.TRIDENTS)
 				{
 					damage = xpDiff / 1.33D;
 					break;
@@ -717,33 +704,6 @@ public class DamageHandler extends InfoHandler
 						break;
 					case LONGRANGE:
 						damage = xpDiff / 2.0D;
-						break;
-				}
-				break;
-			case MAGIC:
-				if (weaponStyle == WeaponStyle.TRIDENTS)
-				{
-					switch (attackStyle)
-					{
-						case LONGRANGE:
-						case DEFENSIVE:
-						case DEFENSIVE_CASTING:
-							damage = xpDiff / 1.33D;
-							break;
-						default:
-							damage = xpDiff / 2.0D;
-							break;
-					}
-					break;
-				}
-				switch (attackStyle)
-				{
-					case ACCURATE:
-					case AGGRESSIVE:
-						damage = xpDiff / 2.0D;
-						break;
-					case DEFENSIVE:
-						damage = xpDiff / 1.33D;
 						break;
 				}
 				break;
