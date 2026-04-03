@@ -768,8 +768,8 @@ public class WeaponMap
 		StyleMap.put(ItemID.DRAGON_THROWNAXE, WeaponStyle.RANGE);
 		StyleMap.put(ItemID.DRYGORE_BLOWPIPE_LOADED, WeaponStyle.RANGE);
 		StyleMap.put(ItemID.DRYGORE_BLOWPIPE, WeaponStyle.RANGE);
-		StyleMap.put(ItemID.VENATOR_BOW_ORNAMENT, WeaponStyle.RANGE);
-		StyleMap.put(ItemID.VENATOR_BOW_ORNAMENT_UNCHARGED, WeaponStyle.RANGE);
+		StyleMap.put(ItemID.VENATOR_BOW_ORNAMENT, WeaponStyle.VENATOR_BOW);
+		StyleMap.put(ItemID.VENATOR_BOW_ORNAMENT_UNCHARGED, WeaponStyle.VENATOR_BOW);
 		StyleMap.put(ItemID.ECLIPSE_ATLATL, WeaponStyle.RANGE);
 		StyleMap.put(ItemID.HEAVY_BALLISTA, WeaponStyle.RANGE);
 		StyleMap.put(ItemID.BR_HEAVY_BALLISTA, WeaponStyle.RANGE);
@@ -872,8 +872,8 @@ public class WeaponMap
 		StyleMap.put(ItemID.TRAIL_COMPOSITE_BOW_YEW, WeaponStyle.RANGE);
 		StyleMap.put(ItemID.YEW_LONGBOW, WeaponStyle.RANGE);
 		StyleMap.put(ItemID.YEW_SHORTBOW, WeaponStyle.RANGE);
-		StyleMap.put(ItemID.VENATOR_BOW, WeaponStyle.RANGE);
-		StyleMap.put(ItemID.VENATOR_BOW_UNCHARGED, WeaponStyle.RANGE);
+		StyleMap.put(ItemID.VENATOR_BOW, WeaponStyle.VENATOR_BOW);
+		StyleMap.put(ItemID.VENATOR_BOW_UNCHARGED, WeaponStyle.VENATOR_BOW);
 		StyleMap.put(ItemID.ZARYTE_BOW, WeaponStyle.RANGE);
 		StyleMap.put(ItemID.ZARYTE_BOW_CHARGED, WeaponStyle.RANGE);
 		StyleMap.put(ItemID.ZARYTE_XBOW, WeaponStyle.RANGE);
@@ -1062,5 +1062,7 @@ public class WeaponMap
 		StyleMap.put(ItemID.TOTS_I_UNCHARGED, WeaponStyle.TRIDENTS);
 		StyleMap.put(ItemID.WARPED_SCEPTRE, WeaponStyle.TRIDENTS);
 		StyleMap.put(ItemID.WARPED_SCEPTRE_UNCHARGED, WeaponStyle.TRIDENTS);
+		StyleMap.put(ItemID.EYE_OF_AYAK, WeaponStyle.TRIDENTS);
+		StyleMap.put(ItemID.EYE_OF_AYAK_UNCHARGED, WeaponStyle.TRIDENTS);
 	}
 }

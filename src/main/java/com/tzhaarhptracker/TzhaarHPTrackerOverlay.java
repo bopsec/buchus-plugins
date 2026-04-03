@@ -27,9 +27,16 @@ package com.tzhaarhptracker;
 
 import com.google.common.base.Strings;
 import java.awt.*;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import net.runelite.api.Client;
@@ -85,7 +92,32 @@ public class TzhaarHPTrackerOverlay extends Overlay
 			WorldView wv = client.getTopLevelWorldView();
 			ArrayList<NPC> stackedNpcs = new ArrayList<>();
 
-			for (TzhaarNPC n : plugin.getNpcs())
+			if (config.showVenatorBounce())
+			{
+				List<Integer> bounces = plugin.getVenatorBounceOrder();
+				if (bounces.size() > 1)
+				{
+					Map<Integer, PluginNPC> npcMap = new HashMap<>();
+					for (PluginNPC n : plugin.getNpcs())
+					{
+						npcMap.put(n.getNpc().getIndex(), n);
+					}
+
+					List<PluginNPC> npcs = bounces.stream()
+						.map(npcMap::get)
+						.filter(Objects::nonNull)
+						.collect(Collectors.toList());
+
+					for (int i = 0; i < npcs.size() - 1; ++i)
+					{
+						PluginNPC from = npcs.get(i);
+						PluginNPC to = npcs.get(i + 1);
+						drawVenatorArrow(graphics, from, to);
+					}
+				}
+			}
+
+			for (PluginNPC n : plugin.getNpcs())
 			{
 				if (shouldHighlight(n.getNpc()))
 				{
@@ -201,7 +233,6 @@ public class TzhaarHPTrackerOverlay extends Overlay
 									}
 								}
 							}
-
 							if (config.highlightStyle().contains(TzhaarHPTrackerConfig.HighlightStyle.HULL))
 							{
 								Shape hull = n.getNpc().getConvexHull();
@@ -210,13 +241,11 @@ public class TzhaarHPTrackerOverlay extends Overlay
 									renderPoly(graphics, line, fill, hull, config.highlightThiCC());
 								}
 							}
-
 							if (config.highlightStyle().contains(TzhaarHPTrackerConfig.HighlightStyle.OUTLINE))
 							{
 								modelOutlineRenderer.drawOutline(n.getNpc(), (int) config.highlightThiCC(), line, 4);
 							}
 						}
-
 						if ((config.showHp() != TzhaarHPTrackerConfig.HpLocation.OFF && n.getNpc().getId() != NpcID.INFERNO_INVISIBLE_3X3)
 							|| (config.showPillarHp() != TzhaarHPTrackerConfig.HpLocation.OFF && n.getNpc().getId() == NpcID.INFERNO_INVISIBLE_3X3))
 						{
@@ -320,7 +349,7 @@ public class TzhaarHPTrackerOverlay extends Overlay
 		}
 	}
 
-	private void drawHp(Graphics2D graphics, ArrayList<NPC> stackedNpcs, TzhaarNPC n)
+	private void drawHp(Graphics2D graphics, ArrayList<NPC> stackedNpcs, PluginNPC n)
 	{
 		int offset = 0;
 		NPC firstStack = null;
@@ -438,4 +467,53 @@ public class TzhaarHPTrackerOverlay extends Overlay
 		}
 		return plugin.getNpcs().stream().anyMatch(npc -> npc.getNpc().getIndex() == n.getIndex());
 	}
+
+	private void drawVenatorArrow(Graphics2D graphics, PluginNPC from, PluginNPC to)
+	{
+		Color lineColor = config.lineVenatorColor();
+		Polygon fp = from.getNpc().getCanvasTilePoly();
+		Polygon tp = to.getNpc().getCanvasTilePoly();
+
+		if (fp != null && tp != null)
+		{
+			Line2D.Double line = new Line2D.Double(getPolyMidpoint(fp), getPolyMidpoint(tp));
+			drawLine(graphics, line, lineColor);
+		}
+	}
+
+	public static void drawLine(Graphics2D graphics, Line2D.Double line, Color color)
+	{
+		graphics.setColor(color);
+		graphics.draw(line);
+		graphics.setStroke(new BasicStroke(1.5f));
+
+		drawLineArrowHead(graphics, line);
+	}
+
+	private Point2D.Double getPolyMidpoint(Polygon polygon)
+	{
+		Rectangle2D bounds = polygon.getBounds2D();
+		return new Point2D.Double((bounds.getMinX() + bounds.getMaxX()) / 2, (bounds.getMinY() + bounds.getMaxY()) / 2);
+	}
+
+	public static void drawLineArrowHead(Graphics2D g2d, Line2D.Double line) {
+		AffineTransform tx = new AffineTransform();
+
+		Polygon arrowHead = new Polygon();
+		arrowHead.addPoint( 0,0);
+		arrowHead.addPoint( -6, -10);
+		arrowHead.addPoint( 6,-10);
+
+		tx.setToIdentity();
+		double angle = Math.atan2(line.y2-line.y1, line.x2-line.x1);
+		tx.translate(line.x2, line.y2);
+		tx.rotate((angle-Math.PI/2d));
+
+		Graphics2D g = (Graphics2D) g2d.create();
+		g.setTransform(tx);
+		g.fill(arrowHead);
+		g.dispose();
+	}
+
+
 }

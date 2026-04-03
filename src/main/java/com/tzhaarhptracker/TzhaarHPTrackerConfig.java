@@ -55,7 +55,7 @@ public interface TzhaarHPTrackerConfig extends Config
 		position = 1,
 		keyName = "highlightStyle",
 		name = "Highlight Style",
-		description = "Picks the highlight style you want for selected Tzhaar NPCs",
+		description = "Picks the highlight style you want for selected NPCs",
 		section = highlightSection
 	)
 	default Set<HighlightStyle> highlightStyle()
@@ -204,7 +204,7 @@ public interface TzhaarHPTrackerConfig extends Config
 		position = 13,
 		keyName = "hideDead",
 		name = "Hide Dead NPCs",
-		description = "Hides Tzhaar NPCs that are predicted to die",
+		description = "Hides NPCs that are predicted to die",
 		section = highlightSection
 	)
 	default boolean hideDead()
@@ -224,6 +224,38 @@ public interface TzhaarHPTrackerConfig extends Config
 	{
 		return 1000;
 	}
+
+	@ConfigItem(
+		position = 15,
+		keyName = "showVenatorBounce",
+		name = "Show Venator Bounce",
+		description = "Show predicted targets for Venator Bounce",
+		section = highlightSection
+	)
+	default boolean showVenatorBounce() {
+		return false;
+	}
+
+	@Alpha
+	@ConfigItem(
+		position = 16,
+		keyName = "venatorBounceLineColor",
+		name = "Venator bounce highlight color",
+		description = "Sets the line color of venator npc highlights",
+		section = highlightSection
+	)
+	default Color lineVenatorColor()
+	{
+		return new Color(255, 64, 255, 160);
+	}
+	@ConfigItem(
+		position = 17,
+		keyName = "hideWarbands",
+		name = "Hide dead fremenniks",
+		description = "Instantly hide Warbands on killing xp drop, overrides Hide Dead NPCs",
+		section = highlightSection
+	)
+	default boolean hideWarbands() { return false; }
 
 	//------------------------------------------------------------//
 	// Font Settings
@@ -402,6 +434,26 @@ public interface TzhaarHPTrackerConfig extends Config
 	{
 		return new Color(255, 0, 0, 50);
 	}
+
+	//
+ 	// Debug
+	//
+	@ConfigSection(
+		name = "Debug",
+		description = "Debug Settings",
+		position = 99,
+		closedByDefault = true
+	)
+	String debugSection = "debug";
+
+	@ConfigItem(
+		keyName = "debug",
+		name = "Debug",
+		description = "",
+		position = 1,
+		section = debugSection
+	)
+	default boolean debug() { return false; }
 
 	//------------------------------------------------------------//
 	// Highlight Enums

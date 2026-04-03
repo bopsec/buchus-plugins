@@ -24,22 +24,22 @@
  */
 package com.tzhaarhptracker;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.NPC;
+import net.runelite.api.coords.WorldPoint;
 
 @EqualsAndHashCode(callSuper = true)
 @Slf4j
 @Data
 @Getter
 @Setter
-public class TzhaarNPC extends PluginNPC
+public class ColosseumNPC extends PluginNPC
 {
-	public TzhaarNPC(NPC npc, int currentHp, int maxHp, int tick)
+	public ColosseumNPC(NPC npc, int currentHp, int maxHp, int tick)
 	{
 		super(npc, currentHp, maxHp, tick);
 	}
