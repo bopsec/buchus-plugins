@@ -586,6 +586,10 @@ public class DamageHandler extends InfoHandler
 						case HITPOINTS:
 							if (attackStyle == AttackStyle.CASTING || weaponStyle == WeaponStyle.TRIDENTS)
 							{
+								if (attackStyle == AttackStyle.CASTING && !aoeSpellQueued)
+								{
+									aoeSpellQueued = isAutoCastingAoe();
+								}
 								hit = calculateHitOnNpc(lastOpponentID, e.getSkill(), currentXp - previousXp, attackStyle, weaponStyle);
 								processHit(hit, currentXp - previousXp, e.getSkill(), attackStyle, weaponStyle, (NPC) lastOpponent);
 							}
@@ -690,7 +694,7 @@ public class DamageHandler extends InfoHandler
 				break;
 			case HITPOINTS:
 				if (attackStyle == AttackStyle.CASTING
-				|| weaponStyle == WeaponStyle.TRIDENTS)
+						|| weaponStyle == WeaponStyle.TRIDENTS)
 				{
 					damage = xpDiff / 1.33D;
 					break;
@@ -943,5 +947,18 @@ public class DamageHandler extends InfoHandler
 	{
 		Widget widget = client.getWidget(596, 9);
 		return widget != null && !widget.isHidden();
+	}
+
+	private boolean isAutoCastingAoe()
+	{
+		if (client.getVarbitValue(VarbitID.AUTOCAST_SET) == 0)
+			return false;
+
+
+
+		int spell = client.getVarbitValue(VarbitID.AUTOCAST_SPELL);
+
+		return (spell >= 35 && spell <= 38) ||
+				(spell >= 43 && spell <= 46);
 	}
 }
