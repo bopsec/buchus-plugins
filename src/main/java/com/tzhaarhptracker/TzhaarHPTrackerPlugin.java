@@ -415,7 +415,7 @@ public class TzhaarHPTrackerPlugin extends Plugin
 			|| config.spellbookWarning() == TzhaarHPTrackerConfig.spellbookWarningMode.BOTH))
 		{
 			if ((option.contains("jump-in") && target.contains("the inferno"))  // Inferno
-				|| (option.contains("enter") && target.contains("entrance"))) // fc and colosseum
+				|| (option.contains("enter") && target.contains("cave entrance"))) // fight caves, i'm ignoring colo because you don't waste anything but time by going in and back out, the others you lose task
 			{
 				if (!config.spellbookCheck().contains(TzhaarHPTrackerConfig.spellbook.NORMAL) && spellbookType.equals("NORMAL"))
 				{
