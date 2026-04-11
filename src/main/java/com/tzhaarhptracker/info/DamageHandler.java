@@ -343,11 +343,11 @@ public class DamageHandler extends InfoHandler
 						int regenAmount = hpInfo != null ? hpInfo.getRegenAmount() : 1;
 						if (currentTick - spawnTick >= regenInterval && n.getNpc().getId() != NpcID.INFERNO_INVISIBLE_3X3)
 						{
-							if (n.getHp() != n.getMaxHp())
+							if (n.getHp() < n.getMaxHp())
 							{
-								n.addHp(regenAmount);
-								n.setSpawnTick(currentTick);
+								n.setHp(Math.min(n.getMaxHp(), n.getHp() + regenAmount));
 							}
+							n.setSpawnTick(currentTick);
 						}
 
 						//Recalculate HP 2 ticks after 1st hitsplat after being set to dead if still alive
