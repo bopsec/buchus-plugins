@@ -256,6 +256,17 @@ public interface TzhaarHPTrackerConfig extends Config
 		section = highlightSection
 	)
 	default boolean hideWarbands() { return false; }
+	@ConfigItem(
+		position = 18,
+		keyName = "hideDeadFromVenatorSingleBounce",
+		name = "Hide dead from single bounce",
+		description = "This will sometimes break because of HP regen",
+		section = highlightSection
+	)
+	default boolean hideDeadFromVenatorSingleBounce()
+	{
+		return false;
+	}
 
 	//------------------------------------------------------------//
 	// Font Settings

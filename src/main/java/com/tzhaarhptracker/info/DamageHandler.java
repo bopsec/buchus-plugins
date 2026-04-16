@@ -750,7 +750,7 @@ public class DamageHandler extends InfoHandler
 				if (target != null)
 				{
 					List<PluginNPC> clump = getAoeTargets(target, aoeStyle);
-					handleTargetDeath(target, damage, xpDiff, aoeStyle, skill, attackStyle, style, clump);
+					handleTargetDeath(target, damage, xpDiff, aoeStyle, skill, attackStyle, style, clump, savedVenatorBouncesThisTick);
 				}
 				aoeSpellQueued = false;
 			}
@@ -801,7 +801,7 @@ public class DamageHandler extends InfoHandler
 		return clump;
 	}
 
-	private void handleTargetDeath(PluginNPC target, int damage, int xpDiff, AoeStyle aoeStyle, Skill skill, AttackStyle attackStyle, WeaponStyle style, List<PluginNPC> clump)
+	private void handleTargetDeath(PluginNPC target, int damage, int xpDiff, AoeStyle aoeStyle, Skill skill, AttackStyle attackStyle, WeaponStyle style, List<PluginNPC> clump, int venatorBounces)
 	{
 		boolean isAoe = aoeStyle != null;
 		if (!isAoe || clump.size() == 1 || client.getVarbitValue(VarbitID.MULTIWAY_INDICATOR) == 0 || (style == WeaponStyle.SCYTHES && attackStyle != AttackStyle.CASTING))
@@ -828,8 +828,13 @@ public class DamageHandler extends InfoHandler
 				&& clump.size() == 3
 				&& clump.get(0).getNpc().getIndex() == clump.get(2).getNpc().getIndex())
 			{
+				if (venatorBounces == 1 && config.hideDeadFromVenatorSingleBounce())
+				{
+					handleDead(clump.get(0), true);
+				}
+
 				// If only one bounce was heard, only two effective hits landed, so A+B dmg is confirmed both died
-				int requiredDamage = venatorBouncesThisTick == 1
+				int requiredDamage = venatorBounces == 1
 					? clump.get(0).getHp() + clump.get(1).getHp()
 					: clump.stream().mapToInt(PluginNPC::getHp).sum() - 1;
 				if (requiredDamage <= damage)
