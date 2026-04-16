@@ -121,23 +121,23 @@ public class TzhaarHPTrackerOverlay extends Overlay
 			{
 				if (shouldHighlight(n.getNpc()))
 				{
-					Color line = !n.isDead() ? config.highlightAliveColor() : config.highlightDeadColor();
-					Color fill = !n.isDead() ? config.fillAliveColor() : config.fillDeadColor();
-
-					if (config.dynamicColor() == TzhaarHPTrackerConfig.DynamicColor.BOTH || config.dynamicColor() == TzhaarHPTrackerConfig.DynamicColor.HIGHLIGHT)
-					{
-						line = plugin.getDynamicColor(n, true);
-						fill = plugin.getDynamicColor(n, false);
-					}
-
 					NPCComposition npcComposition = n.getNpc().getTransformedComposition();
 					if (npcComposition != null)
 					{
 						int size = npcComposition.getSize();
 
 						//Only highlights NPCs - not pillars
-						if (n.getNpc().getId() != NpcID.INFERNO_INVISIBLE_3X3)
+						if (plugin.shouldShowHighlight(n) && n.getNpc().getId() != NpcID.INFERNO_INVISIBLE_3X3)
 						{
+							Color line = !n.isDead() ? config.highlightAliveColor() : config.highlightDeadColor();
+							Color fill = !n.isDead() ? config.fillAliveColor() : config.fillDeadColor();
+
+							if (config.dynamicColor() == TzhaarHPTrackerConfig.DynamicColor.BOTH || config.dynamicColor() == TzhaarHPTrackerConfig.DynamicColor.HIGHLIGHT)
+							{
+								line = plugin.getDynamicColor(n, true);
+								fill = plugin.getDynamicColor(n, false);
+							}
+
 							if (config.highlightStyle().contains(TzhaarHPTrackerConfig.HighlightStyle.TILE))
 							{
 								LocalPoint lp = n.getNpc().getLocalLocation();

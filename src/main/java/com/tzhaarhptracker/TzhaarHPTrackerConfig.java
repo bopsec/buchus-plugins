@@ -269,12 +269,257 @@ public interface TzhaarHPTrackerConfig extends Config
 	}
 
 	//------------------------------------------------------------//
+	// NPC Highlight Settings
+	//------------------------------------------------------------//
+	@ConfigSection(
+		name = "NPC Highlight Settings",
+		description = "Choose which NPC types should be highlighted",
+		position = 2,
+		closedByDefault = true
+	)
+	String npcHighlightSection = "npcHighlightSection";
+
+	@ConfigItem(
+		position = 0,
+		keyName = "highlightFcBat",
+		name = "Fight Cave Bat",
+		description = "Highlights for Tz-Kih",
+		section = npcHighlightSection
+	)
+	default NpcHighlightMode highlightFcBat() { return NpcHighlightMode.BOTH; }
+
+	@ConfigItem(
+		position = 1,
+		keyName = "highlightFcBigBlob",
+		name = "Fight Cave Big Blob",
+		description = "Highlights for Tz-Kek",
+		section = npcHighlightSection
+	)
+	default NpcHighlightMode highlightFcBigBlob() { return NpcHighlightMode.BOTH; }
+
+	@ConfigItem(
+		position = 2,
+		keyName = "highlightFcBloblets",
+		name = "Fight Cave Bloblets",
+		description = "Highlights for small Tz-Kek spawns",
+		section = npcHighlightSection
+	)
+	default NpcHighlightMode highlightFcBloblets() { return NpcHighlightMode.BOTH; }
+
+	@ConfigItem(
+		position = 3,
+		keyName = "highlightFcRanger",
+		name = "Fight Cave Ranger",
+		description = "Highlights for Tok-Xil",
+		section = npcHighlightSection
+	)
+	default NpcHighlightMode highlightFcRanger() { return NpcHighlightMode.BOTH; }
+
+	@ConfigItem(
+		position = 4,
+		keyName = "highlightFcMelee",
+		name = "Fight Cave Melee",
+		description = "Highlights for Yt-MejKot",
+		section = npcHighlightSection
+	)
+	default NpcHighlightMode highlightFcMelee() { return NpcHighlightMode.BOTH; }
+
+	@ConfigItem(
+		position = 5,
+		keyName = "highlightFcMage",
+		name = "Fight Cave Mage",
+		description = "Highlights for Ket-Zek",
+		section = npcHighlightSection
+	)
+	default NpcHighlightMode highlightFcMage() { return NpcHighlightMode.BOTH; }
+
+	@ConfigItem(
+		position = 6,
+		keyName = "highlightFcJad",
+		name = "Fight Cave Jad",
+		description = "Highlights for TzTok-Jad",
+		section = npcHighlightSection
+	)
+	default NpcHighlightMode highlightFcJad() { return NpcHighlightMode.BOTH; }
+
+	@ConfigItem(
+		position = 7,
+		keyName = "highlightFcJadHealer",
+		name = "Fight Cave Jad Healer",
+		description = "Highlights for Yt-HurKot",
+		section = npcHighlightSection
+	)
+	default NpcHighlightMode highlightFcJadHealer() { return NpcHighlightMode.BOTH; }
+
+	@ConfigItem(
+		position = 8,
+		keyName = "highlightInfernoNibbler",
+		name = "Inferno Nibbler",
+		description = "Highlights for Jal-Nib",
+		section = npcHighlightSection
+	)
+	default NpcHighlightMode highlightInfernoNibbler() { return NpcHighlightMode.BOTH; }
+
+	@ConfigItem(
+		position = 9,
+		keyName = "highlightInfernoBat",
+		name = "Inferno Bat",
+		description = "Highlights for Jal-MejRah",
+		section = npcHighlightSection
+	)
+	default NpcHighlightMode highlightInfernoBat() { return NpcHighlightMode.BOTH; }
+
+	@ConfigItem(
+		position = 10,
+		keyName = "highlightInfernoBlob",
+		name = "Inferno Blob",
+		description = "Highlights for Jal-Ak",
+		section = npcHighlightSection
+	)
+	default NpcHighlightMode highlightInfernoBlob() { return NpcHighlightMode.BOTH; }
+
+	@ConfigItem(
+		position = 11,
+		keyName = "highlightInfernoBloblets",
+		name = "Inferno Bloblets",
+		description = "Highlights for Jal-AkRek spawns",
+		section = npcHighlightSection
+	)
+	default NpcHighlightMode highlightInfernoBloblets() { return NpcHighlightMode.BOTH; }
+
+	@ConfigItem(
+		position = 12,
+		keyName = "highlightInfernoMelee",
+		name = "Inferno Melee",
+		description = "Highlights for Jal-ImKot",
+		section = npcHighlightSection
+	)
+	default NpcHighlightMode highlightInfernoMelee() { return NpcHighlightMode.BOTH; }
+
+	@ConfigItem(
+		position = 13,
+		keyName = "highlightInfernoRanger",
+		name = "Inferno Ranger",
+		description = "Highlights for Jal-Xil",
+		section = npcHighlightSection
+	)
+	default NpcHighlightMode highlightInfernoRanger() { return NpcHighlightMode.BOTH; }
+
+	@ConfigItem(
+		position = 14,
+		keyName = "highlightInfernoMage",
+		name = "Inferno Mage",
+		description = "Highlights for Jal-Zek",
+		section = npcHighlightSection
+	)
+	default NpcHighlightMode highlightInfernoMage() { return NpcHighlightMode.BOTH; }
+
+	@ConfigItem(
+		position = 15,
+		keyName = "highlightInfernoJad",
+		name = "Inferno Jad",
+		description = "Highlights for JalTok-Jad",
+		section = npcHighlightSection
+	)
+	default NpcHighlightMode highlightInfernoJad() { return NpcHighlightMode.BOTH; }
+
+	@ConfigItem(
+		position = 16,
+		keyName = "highlightInfernoZuk",
+		name = "Inferno Zuk",
+		description = "Highlights for TzKal-Zuk",
+		section = npcHighlightSection
+	)
+	default NpcHighlightMode highlightInfernoZuk() { return NpcHighlightMode.BOTH; }
+
+	@ConfigItem(
+		position = 17,
+		keyName = "highlightInfernoZukHealer",
+		name = "Inferno Zuk Healer",
+		description = "Highlights for Jal-MejJak",
+		section = npcHighlightSection
+	)
+	default NpcHighlightMode highlightInfernoZukHealer() { return NpcHighlightMode.BOTH; }
+
+	@ConfigItem(
+		position = 18,
+		keyName = "highlightInfernoJadHealer",
+		name = "Inferno Jad Healer",
+		description = "Highlights for Yt-HurKot",
+		section = npcHighlightSection
+	)
+	default NpcHighlightMode highlightInfernoJadHealer() { return NpcHighlightMode.BOTH; }
+
+	@ConfigItem(
+		position = 19,
+		keyName = "highlightFremenniks",
+		name = "Fremenniks",
+		description = "Highlights for all Fremennik warband NPCs",
+		section = npcHighlightSection
+	)
+	default NpcHighlightMode highlightFremenniks() { return NpcHighlightMode.BOTH; }
+
+	@ConfigItem(
+		position = 20,
+		keyName = "highlightSerpentShaman",
+		name = "Serpent Shaman",
+		description = "Highlights for Serpent Shamans",
+		section = npcHighlightSection
+	)
+	default NpcHighlightMode highlightSerpentShaman() { return NpcHighlightMode.BOTH; }
+
+	@ConfigItem(
+		position = 21,
+		keyName = "highlightJaguarWarrior",
+		name = "Jaguar Warrior",
+		description = "Highlights for Jaguar Warriors",
+		section = npcHighlightSection
+	)
+	default NpcHighlightMode highlightJaguarWarrior() { return NpcHighlightMode.BOTH; }
+
+	@ConfigItem(
+		position = 22,
+		keyName = "highlightJavelinColossus",
+		name = "Javelin Colossus",
+		description = "Highlights for Javelin Colossi",
+		section = npcHighlightSection
+	)
+	default NpcHighlightMode highlightJavelinColossus() { return NpcHighlightMode.BOTH; }
+
+	@ConfigItem(
+		position = 23,
+		keyName = "highlightManticore",
+		name = "Manticore",
+		description = "Highlights for Manticores",
+		section = npcHighlightSection
+	)
+	default NpcHighlightMode highlightManticore() { return NpcHighlightMode.BOTH; }
+
+	@ConfigItem(
+		position = 24,
+		keyName = "highlightShockwaveColossus",
+		name = "Shockwave Colossus",
+		description = "Highlights for Shockwave Colossi",
+		section = npcHighlightSection
+	)
+	default NpcHighlightMode highlightShockwaveColossus() { return NpcHighlightMode.BOTH; }
+
+	@ConfigItem(
+		position = 25,
+		keyName = "highlightMinotaur",
+		name = "Minotaur",
+		description = "Highlights for Minotaurs",
+		section = npcHighlightSection
+	)
+	default NpcHighlightMode highlightMinotaur() { return NpcHighlightMode.BOTH; }
+
+	//------------------------------------------------------------//
 	// Font Settings
 	//------------------------------------------------------------//
 	@ConfigSection(
 		name = "Font Settings",
 		description = "Settings for font",
-		position = 2,
+		position = 3,
 		closedByDefault = true
 	)
 	String fontSection = "fontSection";
@@ -544,6 +789,29 @@ public interface TzhaarHPTrackerConfig extends Config
 		public String toString()
 		{
 			return group;
+		}
+	}
+
+	@Getter
+	@RequiredArgsConstructor
+	enum NpcHighlightMode
+	{
+		BOTH("Both"),
+		ALIVE("Alive"),
+		DEAD("Dead"),
+		NEITHER("Neither");
+
+		private final String name;
+
+		public boolean shouldShow(boolean dead)
+		{
+			return this == BOTH || (this == ALIVE && !dead) || (this == DEAD && dead);
+		}
+
+		@Override
+		public String toString()
+		{
+			return name;
 		}
 	}
 

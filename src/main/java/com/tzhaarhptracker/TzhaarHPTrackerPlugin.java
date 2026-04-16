@@ -495,6 +495,88 @@ public class TzhaarHPTrackerPlugin extends Plugin
 		return ColorUtil.colorLerp(line ? config.highlightDeadColor() : config.fillDeadColor(), line ? config.highlightAliveColor() : config.fillAliveColor(), healthRatio);
 	}
 
+	public boolean shouldShowHighlight(PluginNPC npc)
+	{
+		return getHighlightMode(npc.getNpc().getId()).shouldShow(npc.isDead());
+	}
+
+	private TzhaarHPTrackerConfig.NpcHighlightMode getHighlightMode(int npcId)
+	{
+		TzhaarHP tzhaarNpc = TzhaarHP.getNPC(npcId);
+		if (tzhaarNpc != null)
+		{
+			switch (tzhaarNpc)
+			{
+				case FC_BAT:
+					return config.highlightFcBat();
+				case FC_BIG_BLOB:
+					return config.highlightFcBigBlob();
+				case FC_BLOBLETS:
+					return config.highlightFcBloblets();
+				case FC_RANGE:
+					return config.highlightFcRanger();
+				case FC_MELEE:
+					return config.highlightFcMelee();
+				case FC_MAGE:
+					return config.highlightFcMage();
+				case TZTOK_JAD:
+					return config.highlightFcJad();
+				case FC_JAD_HEALER:
+					return config.highlightFcJadHealer();
+				case NIBBLER:
+					return config.highlightInfernoNibbler();
+				case BAT:
+					return config.highlightInfernoBat();
+				case BLOB:
+					return config.highlightInfernoBlob();
+				case BLOBLETS:
+					return config.highlightInfernoBloblets();
+				case MELEE:
+					return config.highlightInfernoMelee();
+				case RANGE:
+					return config.highlightInfernoRanger();
+				case MAGE:
+					return config.highlightInfernoMage();
+				case INFERNO_JAD:
+					return config.highlightInfernoJad();
+				case TZKAL_ZUK:
+					return config.highlightInfernoZuk();
+				case ZUK_HEALER:
+					return config.highlightInfernoZukHealer();
+				case INFERNO_JAD_HEALERS:
+					return config.highlightInfernoJadHealer();
+				case PILLAR:
+					return TzhaarHPTrackerConfig.NpcHighlightMode.BOTH;
+			}
+		}
+
+		ColosseumHP colosseumNpc = ColosseumHP.getNPC(npcId);
+		if (colosseumNpc != null)
+		{
+			switch (colosseumNpc)
+			{
+				case _FREMENNIK_WARBAND_ARCHER:
+				case _FREMENNIK_WARBAND_SEER:
+				case _FREMENNIK_WARBAND_BERSERKER:
+					return config.highlightFremenniks();
+				case _SERPENT_SHAMAN:
+					return config.highlightSerpentShaman();
+				case _JAGUAR_WARRIOR:
+					return config.highlightJaguarWarrior();
+				case _JAVELIN_COLOSSUS:
+					return config.highlightJavelinColossus();
+				case _MANTICORE:
+					return config.highlightManticore();
+				case _SHOCKWAVE_COLOSSUS:
+					return config.highlightShockwaveColossus();
+				case _MINOTAUR:
+					return config.highlightMinotaur();
+			}
+		}
+
+		return TzhaarHPTrackerConfig.NpcHighlightMode.BOTH;
+	}
+
 	public void loadFont()
 	{
 		switch (config.overlayFontType())
