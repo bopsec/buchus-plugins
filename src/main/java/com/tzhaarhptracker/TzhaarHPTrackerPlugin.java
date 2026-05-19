@@ -213,51 +213,114 @@ public class TzhaarHPTrackerPlugin extends Plugin
 			eventBus.register(info);
 		}
 
-		if (client.getGameState() == GameState.LOGGED_IN
-			&& isInAllowedCaves()
-			&& npcs.isEmpty())
+		clientThread.invokeLater(this::loadExistingNpcs);
+	}
+
+	private void loadExistingNpcs()
+	{
+		if (client.getGameState() != GameState.LOGGED_IN
+			|| !isInAllowedCaves()
+			|| !npcs.isEmpty())
 		{
-			for (NPC npc : client.getTopLevelWorldView().npcs())
+			return;
+		}
+
+		for (NPC npc : client.getTopLevelWorldView().npcs())
+		{
+			String name = npc.getName();
+			if (name == null)
 			{
-				if (npc.getName() != null
-					&& (INFERNO_NPC.contains(npc.getName())
-						|| FIGHT_CAVE_NPC.contains(npc.getName())
-						|| COLOSSEUM_NPC.contains(npc.getName())))
+				continue;
+			}
+
+			name = name.toLowerCase();
+			if (!INFERNO_NPC.contains(name)
+				&& !FIGHT_CAVE_NPC.contains(name)
+				&& !COLOSSEUM_NPC.contains(name))
+			{
+				continue;
+			}
+
+			try
+			{
+				if ((INFERNO_NPC.contains(name)
+					|| FIGHT_CAVE_NPC.contains(name))
+					&& TzhaarHP.getNPC(npc.getId()) != null)
 				{
-					try
+					if (isTracked(npc))
 					{
-						if ((INFERNO_NPC.contains(npc.getName())
-							|| FIGHT_CAVE_NPC.contains(npc.getName())
-							&& TzhaarHP.getNPC(npc.getId()) != null))
-						{
-							int hp = TzhaarHP.getMaxHP(npc.getId()) != 0 ? TzhaarHP.getMaxHP(npc.getId()) : npcManager.getHealth(npc.getId());
-							if (hp != 0)
-							{
-								TzhaarNPC newNPC = new TzhaarNPC(npc, hp, hp, client.getTickCount());
-								//Set healed to true -> use ratio + scale to estimate NPCs HP who spawned before plugin startup
-								newNPC.setHealed(true);
-								npcs.add(newNPC);
-							}
-						}
-						else if (COLOSSEUM_NPC.contains(npc.getName()) && ColosseumHP.getNPC(npc.getId()) != null)
-						{
-							int hp = ColosseumHP.getMaxHP(npc.getId()) != 0 ? ColosseumHP.getMaxHP(npc.getId()) : npcManager.getHealth(npc.getId());
-							if (hp != 0)
-							{
-								ColosseumNPC newNPC = new ColosseumNPC(npc, hp, hp, client.getTickCount());
-								//Set healed to true -> use ratio + scale to estimate NPCs HP who spawned before plugin startup
-								newNPC.setHealed(true);
-								npcs.add(newNPC);
-								insertNpcToChunk(newNPC);
-							}
-						}
+						continue;
 					}
-					catch (NullPointerException ignored)
+
+					int maxHp = TzhaarHP.getMaxHP(npc.getId()) != 0 ? TzhaarHP.getMaxHP(npc.getId()) : npcManager.getHealth(npc.getId());
+					if (maxHp != 0)
 					{
+						int currentHp = estimateCurrentHp(npc, maxHp);
+						TzhaarNPC newNPC = new TzhaarNPC(npc, currentHp, maxHp, client.getTickCount());
+						//Set healed to true -> use ratio + scale to estimate NPCs HP who spawned before plugin startup
+						newNPC.setHealed(true);
+						npcs.add(newNPC);
+					}
+				}
+				else if (COLOSSEUM_NPC.contains(name) && ColosseumHP.getNPC(npc.getId()) != null)
+				{
+					if (isTracked(npc))
+					{
+						continue;
+					}
+
+					int maxHp = ColosseumHP.getMaxHP(npc.getId()) != 0 ? ColosseumHP.getMaxHP(npc.getId()) : npcManager.getHealth(npc.getId());
+					if (maxHp != 0)
+					{
+						int currentHp = estimateCurrentHp(npc, maxHp);
+						ColosseumNPC newNPC = new ColosseumNPC(npc, currentHp, maxHp, client.getTickCount());
+						//Set healed to true -> use ratio + scale to estimate NPCs HP who spawned before plugin startup
+						newNPC.setHealed(true);
+						npcs.add(newNPC);
+						insertNpcToChunk(newNPC);
 					}
 				}
 			}
+			catch (NullPointerException ignored)
+			{
+			}
 		}
+	}
+
+	private boolean isTracked(NPC npc)
+	{
+		return npcs.stream().anyMatch(n -> n.getNpc().getIndex() == npc.getIndex());
+	}
+
+	private int estimateCurrentHp(NPC npc, int maxHp)
+	{
+		int ratio = npc.getHealthRatio();
+		int scale = npc.getHealthScale();
+		if (ratio <= 0)
+		{
+			return maxHp;
+		}
+
+		int minHealth = 1;
+		int maxHealth;
+		if (scale > 1)
+		{
+			if (ratio > 1)
+			{
+				minHealth = (maxHp * (ratio - 1) + scale - 2) / (scale - 1);
+			}
+			maxHealth = (maxHp * ratio - 1) / (scale - 1);
+			if (maxHealth > maxHp)
+			{
+				maxHealth = maxHp;
+			}
+		}
+		else
+		{
+			maxHealth = maxHp;
+		}
+
+		return (minHealth + maxHealth + 1) / 2;
 	}
 
 	protected void shutDown() throws Exception
