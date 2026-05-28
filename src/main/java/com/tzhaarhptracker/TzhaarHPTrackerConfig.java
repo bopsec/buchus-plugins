@@ -856,7 +856,6 @@ public interface TzhaarHPTrackerConfig extends Config
 	enum HpTextColorMode
 	{
 		DEFAULT("Default"),
-		DYNAMIC("Dynamic"),
 		SINGLE("Single Color"),
 		ALIVE_DEAD("Alive/Dead");
 

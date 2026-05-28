@@ -424,9 +424,6 @@ public class TzhaarHPTrackerOverlay extends Overlay
 			case ALIVE_DEAD:
 				color = !npc.isDead() ? config.hpAliveTextColor() : config.hpDeadTextColor();
 				break;
-			case DYNAMIC:
-				color = plugin.getDynamicColor(npc, true);
-				break;
 			default:
 				if (config.dynamicColor() == TzhaarHPTrackerConfig.DynamicColor.BOTH || config.dynamicColor() == TzhaarHPTrackerConfig.DynamicColor.HP)
 				{
