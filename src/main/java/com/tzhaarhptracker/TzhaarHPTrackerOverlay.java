@@ -403,17 +403,7 @@ public class TzhaarHPTrackerOverlay extends Overlay
 		if (textLocation != null)
 		{
 			Point offsetLocation = new Point(textLocation.getX(), textLocation.getY() - offset);
-			Color color = !n.isDead() ? config.highlightAliveColor() : config.highlightDeadColor();
-
-			if (config.dynamicColor() == TzhaarHPTrackerConfig.DynamicColor.BOTH || config.dynamicColor() == TzhaarHPTrackerConfig.DynamicColor.HP)
-			{
-				color = plugin.getDynamicColor(n, true);
-			}
-
-			if (config.hpFontAlpha() > 0)
-			{
-				color = new Color(color.getRed(), color.getGreen(), color.getBlue(), config.hpFontAlpha());
-			}
+			Color color = getHpColor(n);
 
 			graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, config.antiAlias() ? RenderingHints.VALUE_ANTIALIAS_ON : RenderingHints.VALUE_ANTIALIAS_OFF);
 			Font oldFont = graphics.getFont();
@@ -421,6 +411,38 @@ public class TzhaarHPTrackerOverlay extends Overlay
 			drawText(graphics, offsetLocation.getX(), offsetLocation.getY(), hp, color);
 			graphics.setFont(oldFont);
 		}
+	}
+
+	private Color getHpColor(PluginNPC npc)
+	{
+		Color color;
+		switch (config.hpTextColorMode())
+		{
+			case SINGLE:
+				color = config.hpTextColor();
+				break;
+			case ALIVE_DEAD:
+				color = !npc.isDead() ? config.hpAliveTextColor() : config.hpDeadTextColor();
+				break;
+			case DYNAMIC:
+				color = plugin.getDynamicColor(npc, true);
+				break;
+			default:
+				if (config.dynamicColor() == TzhaarHPTrackerConfig.DynamicColor.BOTH || config.dynamicColor() == TzhaarHPTrackerConfig.DynamicColor.HP)
+				{
+					color = plugin.getDynamicColor(npc, true);
+				}
+				else
+				{
+					color = !npc.isDead() ? config.highlightAliveColor() : config.highlightDeadColor();
+				}
+		}
+
+		if (config.hpFontAlpha() > 0)
+		{
+			return new Color(color.getRed(), color.getGreen(), color.getBlue(), config.hpFontAlpha());
+		}
+		return color;
 	}
 
 	public void drawText(Graphics2D graphics, int textX, int textY, String text, Color color)

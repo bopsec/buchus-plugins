@@ -605,6 +605,57 @@ public interface TzhaarHPTrackerConfig extends Config
 		return 0;
 	}
 
+	@ConfigItem(
+		position = 6,
+		keyName = "hpTextColorMode",
+		name = "HP Text Color Mode",
+		description = "Select how HP text colors should be chosen",
+		section = fontSection
+	)
+	default HpTextColorMode hpTextColorMode()
+	{
+		return HpTextColorMode.DEFAULT;
+	}
+
+	@Alpha
+	@ConfigItem(
+		position = 7,
+		keyName = "hpTextColor",
+		name = "HP Text Color",
+		description = "Sets the HP text color when HP Text Color Mode is Single Color",
+		section = fontSection
+	)
+	default Color hpTextColor()
+	{
+		return Color.WHITE;
+	}
+
+	@Alpha
+	@ConfigItem(
+		position = 8,
+		keyName = "hpAliveTextColor",
+		name = "Alive HP Text Color",
+		description = "Sets the HP text color for alive NPCs when HP Text Color Mode is Alive/Dead",
+		section = fontSection
+	)
+	default Color hpAliveTextColor()
+	{
+		return new Color(0, 255, 48, 255);
+	}
+
+	@Alpha
+	@ConfigItem(
+		position = 9,
+		keyName = "hpDeadTextColor",
+		name = "Dead HP Text Color",
+		description = "Sets the HP text color for dead NPCs when HP Text Color Mode is Alive/Dead",
+		section = fontSection
+	)
+	default Color hpDeadTextColor()
+	{
+		return new Color(224, 0, 0, 255);
+	}
+
 	//------------------------------------------------------------//
 	// XP Settings
 	//------------------------------------------------------------//
@@ -797,6 +848,24 @@ public interface TzhaarHPTrackerConfig extends Config
 		public String toString()
 		{
 			return group;
+		}
+	}
+
+	@Getter
+	@RequiredArgsConstructor
+	enum HpTextColorMode
+	{
+		DEFAULT("Default"),
+		DYNAMIC("Dynamic"),
+		SINGLE("Single Color"),
+		ALIVE_DEAD("Alive/Dead");
+
+		private final String name;
+
+		@Override
+		public String toString()
+		{
+			return name;
 		}
 	}
 
