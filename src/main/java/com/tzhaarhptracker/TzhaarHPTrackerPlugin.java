@@ -761,9 +761,9 @@ public class TzhaarHPTrackerPlugin extends Plugin
 					boolean normalHide = config.hideDead()
 						&& !EXCLUDED_NPC.contains(Objects.requireNonNull(npc.getNpc().getName()).toLowerCase());
 
-					boolean forceHideWarband = shouldForceHide(npc);
+					boolean forceHideNpc = shouldForceHide(npc);
 
-					if (normalHide || forceHideWarband)
+					if (normalHide || forceHideNpc)
 					{
 						return false;
 					}
@@ -836,12 +836,17 @@ public class TzhaarHPTrackerPlugin extends Plugin
 
 	private boolean shouldForceHide(PluginNPC npc)
 	{
+		int id = npc.getNpc().getId();
+		if (isInInferno() && config.hideInfernoNibblers() && id == NpcID.INFERNO_NIBBLER)
+		{
+			return true;
+		}
+
 		if (!isInColosseum() || !config.hideWarbands())
 		{
 			return false;
 		}
 
-		int id = npc.getNpc().getId();
 		return id == net.runelite.api.gameval.NpcID.COLOSSEUM_WARBANDER_RANGED_FEMALE
 			|| id == net.runelite.api.gameval.NpcID.COLOSSEUM_WARBANDER_MAGE_MALE
 			|| id == NpcID.COLOSSEUM_WARBANDER_MELEE_MALE;

@@ -258,6 +258,14 @@ public interface TzhaarHPTrackerConfig extends Config
 	default boolean hideWarbands() { return false; }
 	@ConfigItem(
 		position = 18,
+		keyName = "hideInfernoNibblers",
+		name = "Hide dead nibblers",
+		description = "Instantly hide Inferno nibblers on killing xp drop, overrides Hide Dead NPCs",
+		section = highlightSection
+	)
+	default boolean hideInfernoNibblers() { return false; }
+	@ConfigItem(
+		position = 19,
 		keyName = "hideDeadFromVenatorSingleBounce",
 		name = "Hide dead from single bounce",
 		description = "This will sometimes break because of HP regen",
