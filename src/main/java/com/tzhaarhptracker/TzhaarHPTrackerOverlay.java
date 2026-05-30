@@ -351,6 +351,11 @@ public class TzhaarHPTrackerOverlay extends Overlay
 
 	private void drawHp(Graphics2D graphics, ArrayList<NPC> stackedNpcs, PluginNPC n)
 	{
+		if (n.getHp() <= 0)
+		{
+			return;
+		}
+
 		int offset = 0;
 		NPC firstStack = null;
 		for (NPC npc : stackedNpcs)
@@ -397,7 +402,7 @@ public class TzhaarHPTrackerOverlay extends Overlay
 			}
 		}
 		stackedNpcs.add(n.getNpc());
-		String hp = n.getHp() < 0 ? "0" : Integer.toString(n.getHp());
+		String hp = Integer.toString(n.getHp());
 		Point textLocation = offset > 0 ? firstStack.getCanvasTextLocation(graphics, hp, zOffset) : n.getNpc().getCanvasTextLocation(graphics, hp, zOffset);
 
 		if (textLocation != null)
