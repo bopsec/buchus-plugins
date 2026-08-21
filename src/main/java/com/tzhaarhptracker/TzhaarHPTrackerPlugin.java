@@ -345,6 +345,11 @@ public class TzhaarHPTrackerPlugin extends Plugin
 		if (isInAllowedCaves())
 		{
 			NPC npc = e.getNpc();
+			if (isTracked(npc))
+			{
+				return;
+			}
+
 			int tick = client.getTickCount();
 
 			if (npc.getName() != null
