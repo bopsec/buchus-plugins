@@ -4,6 +4,7 @@ import com.tzhaarhptracker.PluginNPC;
 import lombok.AllArgsConstructor;
 import net.runelite.api.NPC;
 import net.runelite.api.NPCComposition;
+import net.runelite.api.coords.WorldArea;
 import net.runelite.api.coords.WorldPoint;
 
 import java.util.*;
@@ -98,7 +99,10 @@ public class VenatorSolver {
 			return false;
 		}
 
-		return source.getWorldArea().hasLineOfSightTo(source.getWorldView(), target.getWorldArea());
+		WorldArea sourceArea = source.getWorldArea();
+		WorldArea targetArea = target.getWorldArea();
+		return sourceArea.intersectsWith(targetArea)
+			|| sourceArea.hasLineOfSightTo(source.getWorldView(), targetArea);
 	}
 
 	private static int getSize(NPC npc) {
