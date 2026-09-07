@@ -828,7 +828,7 @@ public class DamageHandler extends InfoHandler
 				&& clump.size() == 3
 				&& clump.get(0).getNpc().getIndex() == clump.get(2).getNpc().getIndex())
 			{
-				if (venatorBounces == 1 && config.hideDeadFromVenatorSingleBounce())
+				if (venatorBounces == 1)
 				{
 					handleDead(clump.get(0), true);
 				}

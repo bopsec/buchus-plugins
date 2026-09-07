@@ -264,17 +264,6 @@ public interface TzhaarHPTrackerConfig extends Config
 		section = highlightSection
 	)
 	default boolean hideInfernoNibblers() { return false; }
-	@ConfigItem(
-		position = 19,
-		keyName = "hideDeadFromVenatorSingleBounce",
-		name = "Hide dead from single bounce",
-		description = "This will sometimes break because of HP regen",
-		section = highlightSection
-	)
-	default boolean hideDeadFromVenatorSingleBounce()
-	{
-		return false;
-	}
 
 	//------------------------------------------------------------//
 	// NPC Highlight Settings
