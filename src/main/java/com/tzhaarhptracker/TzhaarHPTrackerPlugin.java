@@ -27,7 +27,6 @@ package com.tzhaarhptracker;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Provides;
-import com.tzhaarhptracker.attackstyles.WeaponStyle;
 import com.tzhaarhptracker.info.ColosseumHP;
 import com.tzhaarhptracker.info.TzhaarHP;
 import com.tzhaarhptracker.info.VenatorSolver;
@@ -42,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
 import net.runelite.api.events.*;
 import net.runelite.api.gameval.NpcID;
+import net.runelite.api.kit.KitType;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.callback.Hooks;
 import net.runelite.client.config.ConfigManager;
@@ -175,8 +175,6 @@ public class TzhaarHPTrackerPlugin extends Plugin
 
 	private final Hooks.RenderableDrawListener drawListener = this::shouldDraw;
 
-	private Integer lastHoveredNpcIndex = null;
-
 	@Getter
 	final private List<Integer> venatorBounceOrder = new ArrayList<>();
 
@@ -192,6 +190,8 @@ public class TzhaarHPTrackerPlugin extends Plugin
 		npcs.clear();
 		hiddenNPCs.clear();
 		currentWave.clear();
+		chunkIdToOrder.clear();
+		venatorBounceOrder.clear();
 		loadFont();
 		overlayManager.add(overlay);
 		overlayManager.add(reminderOverlay);
@@ -328,6 +328,8 @@ public class TzhaarHPTrackerPlugin extends Plugin
 		npcs.clear();
 		hiddenNPCs.clear();
 		currentWave.clear();
+		chunkIdToOrder.clear();
+		venatorBounceOrder.clear();
 		overlayManager.remove(overlay);
 		overlayManager.remove(reminderOverlay);
 		hooks.unregisterRenderableDrawListener(drawListener);
@@ -404,6 +406,10 @@ public class TzhaarHPTrackerPlugin extends Plugin
 	@Subscribe
 	public void onNpcDespawned(NpcDespawned e)
 	{
+		if (venatorBounceOrder.contains(e.getNpc().getIndex()))
+		{
+			venatorBounceOrder.clear();
+		}
 		npcs.removeIf(n -> n.getNpc().getIndex() == e.getNpc().getIndex());
 		hiddenNPCs.removeIf(h -> h.getNpc().getIndex() == e.getNpc().getIndex());
 	}
@@ -487,19 +493,19 @@ public class TzhaarHPTrackerPlugin extends Plugin
 			{
 				if (!config.spellbookCheck().contains(TzhaarHPTrackerConfig.spellbook.NORMAL) && spellbookType.equals("NORMAL"))
 				{
-					client.setMenuEntries(Arrays.copyOf(client.getMenuEntries(), client.getMenuEntries().length - 1));
+					client.getMenu().setMenuEntries(Arrays.copyOf(client.getMenu().getMenuEntries(), client.getMenu().getMenuEntries().length - 1));
 				}
 				else if (!config.spellbookCheck().contains(TzhaarHPTrackerConfig.spellbook.ANCIENT) && spellbookType.equals("ANCIENT"))
 				{
-					client.setMenuEntries(Arrays.copyOf(client.getMenuEntries(), client.getMenuEntries().length - 1));
+					client.getMenu().setMenuEntries(Arrays.copyOf(client.getMenu().getMenuEntries(), client.getMenu().getMenuEntries().length - 1));
 				}
 				else if (!config.spellbookCheck().contains(TzhaarHPTrackerConfig.spellbook.LUNAR) && spellbookType.equals("LUNAR"))
 				{
-					client.setMenuEntries(Arrays.copyOf(client.getMenuEntries(), client.getMenuEntries().length - 1));
+					client.getMenu().setMenuEntries(Arrays.copyOf(client.getMenu().getMenuEntries(), client.getMenu().getMenuEntries().length - 1));
 				}
 				else if (!config.spellbookCheck().contains(TzhaarHPTrackerConfig.spellbook.ARCEUUS) && spellbookType.equals("ARCEUUS"))
 				{
-					client.setMenuEntries(Arrays.copyOf(client.getMenuEntries(), client.getMenuEntries().length - 1));
+					client.getMenu().setMenuEntries(Arrays.copyOf(client.getMenu().getMenuEntries(), client.getMenu().getMenuEntries().length - 1));
 				}
 			}
 		}
@@ -512,6 +518,8 @@ public class TzhaarHPTrackerPlugin extends Plugin
 		{
 			npcs.clear();
 			hiddenNPCs.clear();
+			clearVenatorState();
+			chunkIdToOrder.clear();
 		}
 		else
 		{
@@ -526,6 +534,8 @@ public class TzhaarHPTrackerPlugin extends Plugin
 				{
 					npcs.clear();
 				}
+				clearVenatorState();
+				chunkIdToOrder.clear();
 
 				if (!hiddenNPCs.isEmpty())
 				{
@@ -704,12 +714,19 @@ public class TzhaarHPTrackerPlugin extends Plugin
 			{
 				hiddenNPCs.clear();
 			}
-			if (isInColosseum())
+			updateChunks();
+			if (!config.showVenatorBounce() || !isVenatorEquipped())
 			{
-				updateChunks();
-				if (this.lastHoveredNpcIndex != null) {
-					this.npcs.stream().filter(npc -> npc.getNpc().getIndex() == this.lastHoveredNpcIndex).findFirst().ifPresent(this::updateHoveredNpc);
-				}
+				clearVenatorState();
+			}
+			else if (client.getLocalPlayer() != null && client.getLocalPlayer().getInteracting() instanceof NPC)
+			{
+				NPC interacting = (NPC) client.getLocalPlayer().getInteracting();
+				this.npcs.stream().filter(npc -> npc.getNpc() == interacting).findFirst().ifPresentOrElse(this::updateHoveredNpc, this::clearVenatorState);
+			}
+			else
+			{
+				clearVenatorState();
 			}
 		}
 
@@ -815,28 +832,41 @@ public class TzhaarHPTrackerPlugin extends Plugin
 	@Subscribe
 	private void onInteractingChanged(InteractingChanged e)
 	{
-		this.venatorBounceOrder.clear();
-		this.lastHoveredNpcIndex = null;
-		if (isInAllowedCaves())
+		if (e.getSource() != client.getLocalPlayer())
 		{
-			if (!config.showVenatorBounce() || handleDamage.getWeaponStyle() != WeaponStyle.VENATOR_BOW) return;
-			if (e.getSource() == client.getLocalPlayer())
-			{
-				if (e.getTarget() instanceof NPC)
-				{
-					this.npcs.stream().filter(npc -> npc.getNpc() == e.getTarget()).findFirst().ifPresent(npc -> {
-						this.lastHoveredNpcIndex = npc.getNpc().getIndex();
-						updateHoveredNpc(npc);
-					});
-				}
-			}
+			return;
 		}
+
+		clearVenatorState();
+		if (!isInAllowedCaves() || !config.showVenatorBounce() || !isVenatorEquipped() || !(e.getTarget() instanceof NPC))
+		{
+			return;
+		}
+
+		this.npcs.stream().filter(npc -> npc.getNpc() == e.getTarget()).findFirst().ifPresent(this::updateHoveredNpc);
 	}
 
 	private void updateHoveredNpc(PluginNPC npc) {
 		this.venatorBounceOrder.clear();
-		if (!config.showVenatorBounce() || handleDamage.getWeaponStyle() != WeaponStyle.VENATOR_BOW) return;
+		if (!config.showVenatorBounce() || !isVenatorEquipped()) return;
 		this.venatorBounceOrder.addAll(VenatorSolver.solve(npc, this.npcs).stream().map(t -> t.getNpc().getIndex()).collect(Collectors.toList()));
+	}
+
+	private boolean isVenatorEquipped()
+	{
+		if (client.getLocalPlayer() == null || client.getLocalPlayer().getPlayerComposition() == null)
+		{
+			return false;
+		}
+
+		Integer weapon = client.getLocalPlayer().getPlayerComposition().getEquipmentId(KitType.WEAPON);
+		return weapon != null && (weapon == net.runelite.api.gameval.ItemID.VENATOR_BOW
+			|| weapon == net.runelite.api.gameval.ItemID.VENATOR_BOW_ORNAMENT);
+	}
+
+	private void clearVenatorState()
+	{
+		venatorBounceOrder.clear();
 	}
 
 	private boolean shouldForceHide(PluginNPC npc)

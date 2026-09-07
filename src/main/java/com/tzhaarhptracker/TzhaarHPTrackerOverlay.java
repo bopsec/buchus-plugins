@@ -28,15 +28,15 @@ package com.tzhaarhptracker;
 import com.google.common.base.Strings;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Line2D;
+import java.awt.geom.CubicCurve2D;
 import java.awt.geom.Point2D;
+import java.awt.geom.QuadCurve2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import net.runelite.api.Client;
@@ -91,31 +91,6 @@ public class TzhaarHPTrackerOverlay extends Overlay
 
 			WorldView wv = client.getTopLevelWorldView();
 			ArrayList<NPC> stackedNpcs = new ArrayList<>();
-
-			if (config.showVenatorBounce())
-			{
-				List<Integer> bounces = plugin.getVenatorBounceOrder();
-				if (bounces.size() > 1)
-				{
-					Map<Integer, PluginNPC> npcMap = new HashMap<>();
-					for (PluginNPC n : plugin.getNpcs())
-					{
-						npcMap.put(n.getNpc().getIndex(), n);
-					}
-
-					List<PluginNPC> npcs = bounces.stream()
-						.map(npcMap::get)
-						.filter(Objects::nonNull)
-						.collect(Collectors.toList());
-
-					for (int i = 0; i < npcs.size() - 1; ++i)
-					{
-						PluginNPC from = npcs.get(i);
-						PluginNPC to = npcs.get(i + 1);
-						drawVenatorArrow(graphics, from, to);
-					}
-				}
-			}
 
 			for (PluginNPC n : plugin.getNpcs())
 			{
@@ -253,6 +228,11 @@ public class TzhaarHPTrackerOverlay extends Overlay
 						}
 					}
 				}
+			}
+
+			if (config.showVenatorBounce())
+			{
+				drawVenatorArrows(graphics);
 			}
 		}
 		return null;
@@ -492,26 +472,87 @@ public class TzhaarHPTrackerOverlay extends Overlay
 		return plugin.getNpcs().stream().anyMatch(npc -> npc.getNpc().getIndex() == n.getIndex());
 	}
 
-	private void drawVenatorArrow(Graphics2D graphics, PluginNPC from, PluginNPC to)
+	private void drawVenatorArrows(Graphics2D graphics)
 	{
-		Color lineColor = config.lineVenatorColor();
-		Polygon fp = from.getNpc().getCanvasTilePoly();
-		Polygon tp = to.getNpc().getCanvasTilePoly();
-
-		if (fp != null && tp != null)
+		List<Integer> bounces = plugin.getVenatorBounceOrder();
+		if (bounces.size() < 2)
 		{
-			Line2D.Double line = new Line2D.Double(getPolyMidpoint(fp), getPolyMidpoint(tp));
-			drawLine(graphics, line, lineColor);
+			return;
+		}
+
+		Map<Integer, PluginNPC> npcMap = new HashMap<>();
+		for (PluginNPC npc : plugin.getNpcs())
+		{
+			npcMap.put(npc.getNpc().getIndex(), npc);
+		}
+
+		for (int i = 0; i < bounces.size() - 1; ++i)
+		{
+			PluginNPC from = npcMap.get(bounces.get(i));
+			PluginNPC to = npcMap.get(bounces.get(i + 1));
+			if (from != null && to != null)
+			{
+				drawVenatorArrow(graphics, from, to, i);
+			}
 		}
 	}
 
-	public static void drawLine(Graphics2D graphics, Line2D.Double line, Color color)
+	private void drawVenatorArrow(Graphics2D graphics, PluginNPC from, PluginNPC to, int bounceIndex)
 	{
-		graphics.setColor(color);
-		graphics.draw(line);
-		graphics.setStroke(new BasicStroke(1.5f));
+		Polygon fp = from.getNpc().getCanvasTilePoly();
+		Polygon tp = to.getNpc().getCanvasTilePoly();
 
-		drawLineArrowHead(graphics, line);
+		if (fp == null || tp == null)
+		{
+			return;
+		}
+
+		Point2D.Double fromCenter = getPolyMidpoint(fp);
+		Point2D.Double toCenter = getPolyMidpoint(tp);
+		double centerDistance = fromCenter.distance(toCenter);
+
+		Graphics2D arrowGraphics = (Graphics2D) graphics.create();
+		try
+		{
+			arrowGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			arrowGraphics.setColor(config.lineVenatorColor());
+			arrowGraphics.setStroke(new BasicStroke(2.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+
+			if (centerDistance < 2.0)
+			{
+				drawStackedVenatorArrow(arrowGraphics, fp, fromCenter, bounceIndex);
+				return;
+			}
+
+			Point2D.Double start = getPolygonBoundaryPoint(fp, fromCenter, toCenter);
+			Point2D.Double end = getPolygonBoundaryPoint(tp, toCenter, fromCenter);
+			double dx = end.x - start.x;
+			double dy = end.y - start.y;
+			double length = Math.hypot(dx, dy);
+			// Adjacent tile polygons share an edge, which makes both clipped points identical.
+			// Pull the ends into the two polygons so the direction is still visible.
+			if (length < 12.0)
+			{
+				start = interpolate(fromCenter, toCenter, 0.2);
+				end = interpolate(fromCenter, toCenter, 0.8);
+				dx = end.x - start.x;
+				dy = end.y - start.y;
+				length = Math.hypot(dx, dy);
+			}
+
+			double bend = Math.min(28.0, Math.max(8.0, length * 0.12));
+			Point2D.Double control = new Point2D.Double(
+				(start.x + end.x) / 2.0 - dy / length * bend,
+				(start.y + end.y) / 2.0 + dx / length * bend);
+			QuadCurve2D.Double curve = new QuadCurve2D.Double(
+				start.x, start.y, control.x, control.y, end.x, end.y);
+			arrowGraphics.draw(curve);
+			drawArrowHead(arrowGraphics, control, end);
+		}
+		finally
+		{
+			arrowGraphics.dispose();
+		}
 	}
 
 	private Point2D.Double getPolyMidpoint(Polygon polygon)
@@ -520,23 +561,86 @@ public class TzhaarHPTrackerOverlay extends Overlay
 		return new Point2D.Double((bounds.getMinX() + bounds.getMaxX()) / 2, (bounds.getMinY() + bounds.getMaxY()) / 2);
 	}
 
-	public static void drawLineArrowHead(Graphics2D g2d, Line2D.Double line) {
-		AffineTransform tx = new AffineTransform();
+	private void drawStackedVenatorArrow(Graphics2D graphics, Polygon polygon, Point2D.Double center, int bounceIndex)
+	{
+		Rectangle2D bounds = polygon.getBounds2D();
+		double radiusX = Math.max(18.0, bounds.getWidth() * 0.55);
+		double radiusY = Math.max(24.0, bounds.getHeight() * 1.1);
+		boolean reverse = bounceIndex % 2 != 0;
+		double verticalDirection = reverse ? 1.0 : -1.0;
+		Point2D.Double start = new Point2D.Double(center.x + (reverse ? radiusX * 0.45 : -radiusX * 0.45), center.y);
+		Point2D.Double end = new Point2D.Double(center.x + (reverse ? -radiusX * 0.45 : radiusX * 0.45), center.y);
+		Point2D.Double control1 = new Point2D.Double(center.x + (reverse ? radiusX : -radiusX), center.y + verticalDirection * radiusY);
+		Point2D.Double control2 = new Point2D.Double(center.x + (reverse ? -radiusX : radiusX), center.y + verticalDirection * radiusY);
 
+		CubicCurve2D.Double curve = new CubicCurve2D.Double(
+			start.x, start.y,
+			control1.x, control1.y,
+			control2.x, control2.y,
+			end.x, end.y);
+		graphics.draw(curve);
+		drawArrowHead(graphics, control2, end);
+	}
+
+	private Point2D.Double getPolygonBoundaryPoint(Polygon polygon, Point2D.Double from, Point2D.Double toward)
+	{
+		double rayX = toward.x - from.x;
+		double rayY = toward.y - from.y;
+		double nearestT = Double.POSITIVE_INFINITY;
+
+		for (int i = 0; i < polygon.npoints; ++i)
+		{
+			int next = (i + 1) % polygon.npoints;
+			double edgeStartX = polygon.xpoints[i];
+			double edgeStartY = polygon.ypoints[i];
+			double edgeX = polygon.xpoints[next] - edgeStartX;
+			double edgeY = polygon.ypoints[next] - edgeStartY;
+			double denominator = cross(rayX, rayY, edgeX, edgeY);
+			if (Math.abs(denominator) < 0.0001)
+			{
+				continue;
+			}
+
+			double offsetX = edgeStartX - from.x;
+			double offsetY = edgeStartY - from.y;
+			double t = cross(offsetX, offsetY, edgeX, edgeY) / denominator;
+			double u = cross(offsetX, offsetY, rayX, rayY) / denominator;
+			if (t > 0.0 && t <= 1.0 && u >= 0.0 && u <= 1.0 && t < nearestT)
+			{
+				nearestT = t;
+			}
+		}
+
+		if (Double.isInfinite(nearestT))
+		{
+			return from;
+		}
+		return new Point2D.Double(from.x + rayX * nearestT, from.y + rayY * nearestT);
+	}
+
+	private double cross(double ax, double ay, double bx, double by)
+	{
+		return ax * by - ay * bx;
+	}
+
+	private Point2D.Double interpolate(Point2D.Double from, Point2D.Double to, double amount)
+	{
+		return new Point2D.Double(
+			from.x + (to.x - from.x) * amount,
+			from.y + (to.y - from.y) * amount);
+	}
+
+	private void drawArrowHead(Graphics2D graphics, Point2D.Double from, Point2D.Double tip)
+	{
 		Polygon arrowHead = new Polygon();
-		arrowHead.addPoint( 0,0);
-		arrowHead.addPoint( -6, -10);
-		arrowHead.addPoint( 6,-10);
+		arrowHead.addPoint(0, 0);
+		arrowHead.addPoint(-7, -11);
+		arrowHead.addPoint(7, -11);
 
-		tx.setToIdentity();
-		double angle = Math.atan2(line.y2-line.y1, line.x2-line.x1);
-		tx.translate(line.x2, line.y2);
-		tx.rotate((angle-Math.PI/2d));
-
-		Graphics2D g = (Graphics2D) g2d.create();
-		g.setTransform(tx);
-		g.fill(arrowHead);
-		g.dispose();
+		double angle = Math.atan2(tip.y - from.y, tip.x - from.x);
+		AffineTransform transform = AffineTransform.getTranslateInstance(tip.x, tip.y);
+		transform.rotate(angle - Math.PI / 2.0);
+		graphics.fill(transform.createTransformedShape(arrowHead));
 	}
 
 

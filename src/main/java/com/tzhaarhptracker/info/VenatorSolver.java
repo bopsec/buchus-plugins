@@ -3,6 +3,7 @@ package com.tzhaarhptracker.info;
 import com.tzhaarhptracker.PluginNPC;
 import lombok.AllArgsConstructor;
 import net.runelite.api.NPC;
+import net.runelite.api.NPCComposition;
 import net.runelite.api.coords.WorldPoint;
 
 import java.util.*;
@@ -11,6 +12,7 @@ import java.util.stream.Collectors;
 // ported from my los tool
 public class VenatorSolver {
 	private static final int RANGE = 2;
+	private static final int TARGET_RANGE = 3;
 
 	@AllArgsConstructor
 	static class ScanTiles {
@@ -38,7 +40,6 @@ public class VenatorSolver {
 		List<Integer> chunkOrder = ChunkUtils.getChunkPriorityGridOrder(me.getChunkId());
 		Set<Integer> chunksToCheck = new HashSet<>(chunkOrder);
 		List<PluginNPC> sortedNpcs = allNpcs.stream()
-			.filter(npc -> npc.getNpc().getWorldLocation().distanceTo(me.getNpc().getWorldLocation()) <= 3)
 			.filter(npc -> chunksToCheck.contains(npc.getChunkId()))
 			.sorted(
 				Comparator
@@ -66,37 +67,50 @@ public class VenatorSolver {
 		return wp.distanceTo(wp2) <= RANGE;
 	}
 
-	private static boolean anyInRange(List<WorldPoint> wps1, List<WorldPoint> wps2) {
-		return wps1.stream().anyMatch(wp -> wps2.stream().allMatch(wp2 -> isInRange(wp, wp2)));
-	}
-
 	private static boolean canBounce(NPC one, NPC two) {
 		ScanTiles oneTiles = getScanTiles(one);
 		ScanTiles twoTiles = getScanTiles(two);
-		int sizeOne = one.getComposition().getSize();
-		int sizeTwo = two.getComposition().getSize();
+		int sizeOne = getSize(one);
+		List<WorldPoint> sourceTiles;
 		switch (sizeOne) {
 			case 1:
 			case 3:
 			case 5:
-				return anyInRange(List.of(oneTiles.center), List.of(twoTiles.sw, twoTiles.center));
+				sourceTiles = List.of(oneTiles.center);
+				break;
 			case 2:
-				List<WorldPoint> allTiles = getAllTiles(one);
-				if (sizeTwo <= 3) {
-					return anyInRange(allTiles, List.of(twoTiles.center));
-				} else if (sizeTwo <= 5) {
-					return anyInRange(allTiles, List.of(twoTiles.centerSw, twoTiles.center));
-				}
 			case 4:
-				// not in colo, but anyway...
-				List<WorldPoint> middle2x2 = getAllTiles(one.getWorldLocation().dx(1).dy(1), 2);
-				return anyInRange(middle2x2, List.of(twoTiles.sw, twoTiles.centerSw));
+				sourceTiles = getAllTiles(one);
+				break;
+			default:
+				return false;
 		}
-		return false;
+
+		boolean targetCenterInRange = sourceTiles.stream()
+			.anyMatch(sourceTile -> isInRange(sourceTile, twoTiles.center));
+		boolean targetTileInRange = getAllTiles(two).stream()
+			.anyMatch(targetTile -> targetTile.distanceTo(oneTiles.center) <= TARGET_RANGE);
+		return targetCenterInRange && targetTileInRange && hasLineOfSight(one, two);
+	}
+
+	private static boolean hasLineOfSight(NPC source, NPC target) {
+		if (source.getWorldView() == null || source.getWorldView() != target.getWorldView()) {
+			return false;
+		}
+
+		return source.getWorldArea().hasLineOfSightTo(source.getWorldView(), target.getWorldArea());
+	}
+
+	private static int getSize(NPC npc) {
+		NPCComposition composition = npc.getTransformedComposition();
+		if (composition == null) {
+			composition = npc.getComposition();
+		}
+		return composition == null ? 1 : composition.getSize();
 	}
 
 	private static ScanTiles getScanTiles(NPC npc) {
-		int size = npc.getComposition().getSize();
+		int size = getSize(npc);
 		WorldPoint position = npc.getWorldLocation();
 		switch (size) {
 			case 1:
@@ -114,7 +128,7 @@ public class VenatorSolver {
 	}
 
 	private static List<WorldPoint> getAllTiles(NPC npc) {
-		int size = npc.getComposition().getSize();
+		int size = getSize(npc);
 		WorldPoint position = npc.getWorldLocation();
 		return getAllTiles(position, size);
 	}
