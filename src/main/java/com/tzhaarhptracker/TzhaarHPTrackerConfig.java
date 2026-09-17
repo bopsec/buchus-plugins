@@ -115,7 +115,7 @@ public interface TzhaarHPTrackerConfig extends Config
 		return new Color(255, 0, 0, 60);
 	}
 
-	@Range(min = 0, max = 50)
+	@Range(max = 50)
 	@ConfigItem(
 		position = 6,
 		keyName = "highlightThiCC",
@@ -174,18 +174,6 @@ public interface TzhaarHPTrackerConfig extends Config
 	default HpLocation showPillarHp()
 	{
 		return HpLocation.OFF;
-	}
-
-	@ConfigItem(
-		position = 11,
-		keyName = "dynamicHpColor",
-		name = "Dynamic HP Color",
-		description = "Changes the color of the HP dynamically",
-		section = highlightSection
-	)
-	default DynamicColor dynamicColor()
-	{
-		return DynamicColor.OFF;
 	}
 
 	@ConfigItem(
@@ -581,12 +569,12 @@ public interface TzhaarHPTrackerConfig extends Config
 		return Background.SHADOW;
 	}
 
-	@Range(min = 0, max = 255)
+	@Range(max = 255)
 	@ConfigItem(
 		position = 5,
 		keyName = "hpFontAlpha",
 		name = "HP Font Alpha",
-		description = "Sets the alpha for text overlays <br>0 will use the alpha of the Alive/Dead or Dynamic colors",
+		description = "Sets the alpha for text overlays <br>0 will use the alpha of the selected HP text colors",
 		section = fontSection
 	)
 	default int hpFontAlpha()
@@ -810,25 +798,6 @@ public interface TzhaarHPTrackerConfig extends Config
 		HP_BAR("Above HP Bar"),
 		CENTER("Center of NPC"),
 		FEET("Bottom of NPC");
-
-		@Getter
-		private final String group;
-
-		@Override
-		public String toString()
-		{
-			return group;
-		}
-	}
-
-	@Getter
-	@RequiredArgsConstructor
-	enum DynamicColor
-	{
-		OFF("Off"),
-		HIGHLIGHT("Highlight"),
-		HP("Hitpoints"),
-		BOTH("Both");
 
 		@Getter
 		private final String group;

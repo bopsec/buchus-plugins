@@ -103,17 +103,12 @@ public class TzhaarHPTrackerPlugin extends Plugin
 	@Inject
 	private EventBus eventBus;
 
-	private static final Set<MenuAction> NPC_MENU_ACTIONS = ImmutableSet.of(
-		MenuAction.NPC_FIRST_OPTION, MenuAction.NPC_SECOND_OPTION, MenuAction.NPC_THIRD_OPTION, MenuAction.NPC_FOURTH_OPTION,
-		MenuAction.NPC_FIFTH_OPTION, MenuAction.WIDGET_TARGET_ON_NPC, MenuAction.ITEM_USE_ON_NPC
-	);
-
 	private static final Collection<Integer> allowedBanks = Set.of(7316, 9808, 9552, 10063, 10064, 10065);
 
 	@Getter
 	private final ArrayList<PluginNPC> npcs = new ArrayList<>();
 
-	private final Map<Integer, Integer> chunkIdToOrder = new HashMap<Integer, Integer>();
+	private final Map<Integer, Integer> chunkIdToOrder = new HashMap<>();
 
 	@Getter
 	private final ArrayList<PluginNPC> hiddenNPCs = new ArrayList<>();
@@ -471,11 +466,6 @@ public class TzhaarHPTrackerPlugin extends Plugin
 						color = config.highlightAliveColor();
 					}
 
-					if (config.dynamicColor() != TzhaarHPTrackerConfig.DynamicColor.OFF)
-					{
-						color = getDynamicColor(n, true);
-					}
-
 					if (color != null)
 					{
 						final String tzhaar = ColorUtil.prependColorTag(Text.removeTags(e.getTarget()), color);
@@ -560,17 +550,6 @@ public class TzhaarHPTrackerPlugin extends Plugin
 					break;
 			}
 		}
-	}
-
-	public Color getDynamicColor(PluginNPC n, boolean line)
-	{
-		if (n.getHp() <= 0)
-		{
-			return line ? config.highlightDeadColor() : config.fillDeadColor();
-		}
-
-		double healthRatio = Math.min(1.0, (double) n.getHp() / n.getMaxHp());
-		return ColorUtil.colorLerp(line ? config.highlightDeadColor() : config.fillDeadColor(), line ? config.highlightAliveColor() : config.fillAliveColor(), healthRatio);
 	}
 
 	public boolean shouldShowHighlight(PluginNPC npc)
@@ -669,7 +648,7 @@ public class TzhaarHPTrackerPlugin extends Plugin
 				font = FontManager.getRunescapeBoldFont();
 				break;
 			case CUSTOM:
-				if (!config.overlayFontName().equals(""))
+				if (!config.overlayFontName().isEmpty())
 				{
 					font = new Font(config.overlayFontName(), config.overlayFontWeight().getWeight(), config.overlayFontSize());
 				}

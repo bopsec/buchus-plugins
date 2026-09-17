@@ -107,12 +107,6 @@ public class TzhaarHPTrackerOverlay extends Overlay
 							Color line = !n.isDead() ? config.highlightAliveColor() : config.highlightDeadColor();
 							Color fill = !n.isDead() ? config.fillAliveColor() : config.fillDeadColor();
 
-							if (config.dynamicColor() == TzhaarHPTrackerConfig.DynamicColor.BOTH || config.dynamicColor() == TzhaarHPTrackerConfig.DynamicColor.HIGHLIGHT)
-							{
-								line = plugin.getDynamicColor(n, true);
-								fill = plugin.getDynamicColor(n, false);
-							}
-
 							if (config.highlightStyle().contains(TzhaarHPTrackerConfig.HighlightStyle.TILE))
 							{
 								LocalPoint lp = n.getNpc().getLocalLocation();
@@ -253,12 +247,6 @@ public class TzhaarHPTrackerOverlay extends Overlay
 
 	/**
 	 * Draws only the corners of NPC tile highlights - Made by Geheur
-	 *
-	 * @param graphics
-	 * @param outlineColor
-	 * @param fillColor
-	 * @param poly
-	 * @param width
 	 */
 	private void renderPolygonCorners(Graphics2D graphics, Color outlineColor, Color fillColor, Shape poly, double width)
 	{
@@ -291,13 +279,6 @@ public class TzhaarHPTrackerOverlay extends Overlay
 
 	/**
 	 * Draws the corners and dashed lines along each side of NPC tile highlights - Made by Geheur
-	 *
-	 * @param graphics
-	 * @param outlineColor
-	 * @param fillColor
-	 * @param poly
-	 * @param width
-	 * @param tiles
 	 */
 	private void renderPolygonDashed(Graphics2D graphics, Color outlineColor, Color fillColor, Shape poly, double width, int tiles)
 	{
@@ -410,14 +391,7 @@ public class TzhaarHPTrackerOverlay extends Overlay
 				color = !npc.isDead() ? config.hpAliveTextColor() : config.hpDeadTextColor();
 				break;
 			default:
-				if (config.dynamicColor() == TzhaarHPTrackerConfig.DynamicColor.BOTH || config.dynamicColor() == TzhaarHPTrackerConfig.DynamicColor.HP)
-				{
-					color = plugin.getDynamicColor(npc, true);
-				}
-				else
-				{
-					color = !npc.isDead() ? config.highlightAliveColor() : config.highlightDeadColor();
-				}
+				color = !npc.isDead() ? config.highlightAliveColor() : config.highlightDeadColor();
 		}
 
 		if (config.hpFontAlpha() > 0)
