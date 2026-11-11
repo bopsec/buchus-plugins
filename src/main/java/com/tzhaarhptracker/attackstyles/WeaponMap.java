@@ -878,6 +878,7 @@ public class WeaponMap
 		StyleMap.put(ItemID.ZARYTE_BOW_CHARGED, WeaponStyle.RANGE);
 		StyleMap.put(ItemID.ZARYTE_XBOW, WeaponStyle.RANGE);
 		StyleMap.put(ItemID.BR_ZARYTE_XBOW, WeaponStyle.RANGE);
+		StyleMap.put(ItemID.ASCENSION_CROSSBOWS, WeaponStyle.RANGE);
 
 		//Chins
 		StyleMap.put(ItemID.CHINCHOMPA_BLACK, WeaponStyle.CHINS);
@@ -1064,5 +1065,7 @@ public class WeaponMap
 		StyleMap.put(ItemID.WARPED_SCEPTRE_UNCHARGED, WeaponStyle.TRIDENTS);
 		StyleMap.put(ItemID.EYE_OF_AYAK, WeaponStyle.TRIDENTS);
 		StyleMap.put(ItemID.EYE_OF_AYAK_UNCHARGED, WeaponStyle.TRIDENTS);
+		StyleMap.put(ItemID.ZORYAS_TOME, WeaponStyle.TRIDENTS);
+		StyleMap.put(ItemID.ZORYAS_TOME_UNCHARGED, WeaponStyle.TRIDENTS);
 	}
 }
